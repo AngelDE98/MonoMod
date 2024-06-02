@@ -1,0 +1,10 @@
+- name: Home
+  href: index.md
+- name: API
+  href: api/
+- name: DevDocs
+  href: docs/
+- name: GitHub
+  href: https://github.com/MonoMod
+- name: Discord
+  href: https://discord.gg/jm7GCZB

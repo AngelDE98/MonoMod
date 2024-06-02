@@ -196,7 +196,7 @@ namespace System
                 else if (typeof(T) == typeof(char) && _object is string s)
                 {
                     Debug.Assert(_length >= 0);
-                    return new ReadOnlySpan<T>(Unsafe.As<Pinnable<T>>(s), MemoryExtensions.StringAdjustment, s.Length).Slice(_index, _length);
+                    return new ReadOnlySpan<T>(Unsafe.As<Pinnable<T>>(s), MemoryExtensions.StringAdjustmentHolder.StringAdjustment, s.Length).Slice(_index, _length);
                 }
                 else if (_object != null)
                 {

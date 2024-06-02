@@ -23,11 +23,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
-		azure-pipelines-coretest.yml = azure-pipelines-coretest.yml
-		azure-pipelines-docfx.ps1 = azure-pipelines-docfx.ps1
-		azure-pipelines-postbuild.yml = azure-pipelines-postbuild.yml
-		azure-pipelines-prepushcommon.ps1 = azure-pipelines-prepushcommon.ps1
-		azure-pipelines.yml = azure-pipelines.yml
 		Directory.Build.rsp = Directory.Build.rsp
 		global.json = global.json
 		icon.png = icon.png
@@ -51,6 +46,12 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "iced", "external\iced.csproj", "{119A01EE-2238-423C-BE5B-48C68D7D14A7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoMod.Backports.Tasks", "src\MonoMod.Backports.Tasks\MonoMod.Backports.Tasks.csproj", "{ED959596-2FAE-4B3D-8DF8-8F0058E8068D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = ".github", ".github\.github.csproj", "{179EC228-CED4-429E-934F-422C96273F74}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "docs", "docs\docs.csproj", "{4A65448D-466F-4E87-9797-41F43787EFF3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "docfx", "docfx\docfx.csproj", "{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -188,6 +189,30 @@ Global
 		{ED959596-2FAE-4B3D-8DF8-8F0058E8068D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{ED959596-2FAE-4B3D-8DF8-8F0058E8068D}.ReleaseTrace|Any CPU.ActiveCfg = ReleaseTrace|Any CPU
 		{ED959596-2FAE-4B3D-8DF8-8F0058E8068D}.ReleaseTrace|Any CPU.Build.0 = ReleaseTrace|Any CPU
+		{179EC228-CED4-429E-934F-422C96273F74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{179EC228-CED4-429E-934F-422C96273F74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{179EC228-CED4-429E-934F-422C96273F74}.DebugTrace|Any CPU.ActiveCfg = DebugTrace|Any CPU
+		{179EC228-CED4-429E-934F-422C96273F74}.DebugTrace|Any CPU.Build.0 = DebugTrace|Any CPU
+		{179EC228-CED4-429E-934F-422C96273F74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{179EC228-CED4-429E-934F-422C96273F74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{179EC228-CED4-429E-934F-422C96273F74}.ReleaseTrace|Any CPU.ActiveCfg = ReleaseTrace|Any CPU
+		{179EC228-CED4-429E-934F-422C96273F74}.ReleaseTrace|Any CPU.Build.0 = ReleaseTrace|Any CPU
+		{4A65448D-466F-4E87-9797-41F43787EFF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A65448D-466F-4E87-9797-41F43787EFF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A65448D-466F-4E87-9797-41F43787EFF3}.DebugTrace|Any CPU.ActiveCfg = DebugTrace|Any CPU
+		{4A65448D-466F-4E87-9797-41F43787EFF3}.DebugTrace|Any CPU.Build.0 = DebugTrace|Any CPU
+		{4A65448D-466F-4E87-9797-41F43787EFF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A65448D-466F-4E87-9797-41F43787EFF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A65448D-466F-4E87-9797-41F43787EFF3}.ReleaseTrace|Any CPU.ActiveCfg = ReleaseTrace|Any CPU
+		{4A65448D-466F-4E87-9797-41F43787EFF3}.ReleaseTrace|Any CPU.Build.0 = ReleaseTrace|Any CPU
+		{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698}.DebugTrace|Any CPU.ActiveCfg = DebugTrace|Any CPU
+		{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698}.DebugTrace|Any CPU.Build.0 = DebugTrace|Any CPU
+		{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698}.ReleaseTrace|Any CPU.ActiveCfg = ReleaseTrace|Any CPU
+		{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698}.ReleaseTrace|Any CPU.Build.0 = ReleaseTrace|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -195,6 +220,9 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{7B682BC4-241C-4B74-8EDC-2D7677A79337} = {BCABFBF3-BB48-4C21-9A52-E140015570A9}
 		{119A01EE-2238-423C-BE5B-48C68D7D14A7} = {69977055-8E22-4EB0-850D-6EE7D592BC04}
+		{179EC228-CED4-429E-934F-422C96273F74} = {BCABFBF3-BB48-4C21-9A52-E140015570A9}
+		{4A65448D-466F-4E87-9797-41F43787EFF3} = {BCABFBF3-BB48-4C21-9A52-E140015570A9}
+		{0BE9C4EB-1595-49E7-A2AA-09CA7E74C698} = {BCABFBF3-BB48-4C21-9A52-E140015570A9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E10A3D07-6D9A-4898-B95F-268636312A67}

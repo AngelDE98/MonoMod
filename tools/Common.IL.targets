@@ -16,7 +16,7 @@
                       Reference="false" ReferenceOutputAssembly="false"
                       OutputItemType="ILVersionPatcher"
                       Private="false" Pack="false"
-                      SetTargetFramework="TargetFramework=net6.0"
+                      SetTargetFramework="TargetFramework=net8.0"
                       SkipGetTargetFrameworkProperties="true" />
   </ItemGroup>
 

@@ -2,7 +2,7 @@
   "sdk": {
     "allowPrerelease": true,
     "rollForward": "latestMinor",
-    "version": "8.0.100"
+    "version": "8.0.203"
   },
   "msbuild-sdks": {
     "Microsoft.Build.NoTargets": "3.7.56",

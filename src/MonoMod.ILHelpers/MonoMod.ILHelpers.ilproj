@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Descripton>A collection of IL helpers for MonoMod, including a backport of System.Runtime.CompilerServices.Unsafe.</Descripton>
 
-    <VersionPrefix>1.0.1</VersionPrefix>
+    <VersionPrefix>1.1.0</VersionPrefix>
     <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
   </PropertyGroup>
   

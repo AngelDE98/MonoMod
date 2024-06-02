@@ -5,7 +5,7 @@ General purpose .NET assembly modding "basework", powered by [cecil](https://git
 *<sup>MIT-licensed.</sup>*
 <!-- #links -->
 
-[![Build status](https://img.shields.io/azure-devops/build/MonoMod/MonoMod/1.svg?style=flat-square)](https://dev.azure.com/MonoMod/MonoMod/_build/latest?definitionId=1) ![Deployment status](https://img.shields.io/azure-devops/release/MonoMod/572c97eb-dbaa-4a55-90e5-1d05431535bd/1/1.svg?style=flat-square)
+[![Build and Test](https://github.com/MonoMod/MonoMod/actions/workflows/ci.yml/badge.svg)](https://github.com/MonoMod/MonoMod/actions/workflows/ci.yml)
 
 | GitHub: All | NuGet: Patcher | NuGet: Utils | NuGet: RuntimeDetour | NuGet: HookGen |
 |--|--|--|--|--|
@@ -16,24 +16,7 @@ General purpose .NET assembly modding "basework", powered by [cecil](https://git
 
 ## Sections
 - [Introduction](#introduction)
-- [Using MonoMod](#using-monomod)
-- [Using ModInterop (ext)](/README-ModInterop.md)
-- [Using RuntimeDetour & HookGen (ext)](/README-RuntimeDetour.md)
-- [FAQ](#faq)
-
-### Special thanks to my [patrons on Patreon](https://www.patreon.com/0x0ade):
-- [Chad Yates](https://twitter.com/ChadCYates)
-- [Sc2ad](https://github.com/sc2ad)
-- Raegous
-- Chaser6
-- [Harrison Clarke](https://twitter.com/hay_guise)
-- [KyleTheScientist](https://www.twitch.tv/kylethescientist)
-- [Renaud Bédard](https://twitter.com/renaudbedard)
-- [leo60228](https://leo60228.space)
-- [Rubydragon](https://www.twitch.tv/rubydrag0n)
-- Holly Magala
-- [Jimmy Londo (iamdadbod)](https://www.youtube.com/iamdadbod)
-- [Artus Elias Meyer-Toms](https://twitter.com/artuselias)
+- [Using RuntimeDetour](docs/RuntimeDetour/Usage.md)
 
 ----
 
@@ -45,7 +28,7 @@ Mods / mod loaders for the following games are already using it in one way or an
 - Celeste: [Everest](https://everestapi.github.io/)
 - Risk of Rain 2: [BepInExPack (BepInEx + MonoMod + R2API)](https://thunderstore.io/package/bbepis/BepInExPack/)
 - Enter the Gungeon: [Mod the Gungeon](https://modthegungeon.github.io/)
-- Rain World: [RainDB via Partiality](http://www.raindb.net/)
+- Rain World: [RainDB via BepInEx](http://www.raindb.net/)
 - Totally Accurate Battle Simulator: [TABS-Multiplayer](https://github.com/Ceiridge/TABS-Multiplayer)
 - Salt and Sanctuary: [Salt.Modding](https://github.com/seanpr96/Salt.Modding)
 - Nimbatus: [Nimbatus-Mods via Partiality](https://github.com/OmegaRogue/Nimbatus-Mods)
@@ -75,6 +58,16 @@ It consists of the following **modular components**:
 
 ---
 
-### Debugging mods that use MonoMod
-
-See [Debugging](docs/Debugging.md).
+### Special thanks to my [patrons on Patreon](https://www.patreon.com/0x0ade):
+- [Chad Yates](https://twitter.com/ChadCYates)
+- [Sc2ad](https://github.com/sc2ad)
+- Raegous
+- Chaser6
+- [Harrison Clarke](https://twitter.com/hay_guise)
+- [KyleTheScientist](https://www.twitch.tv/kylethescientist)
+- [Renaud Bédard](https://twitter.com/renaudbedard)
+- [leo60228](https://leo60228.space)
+- [Rubydragon](https://www.twitch.tv/rubydrag0n)
+- Holly Magala
+- [Jimmy Londo (iamdadbod)](https://www.youtube.com/iamdadbod)
+- [Artus Elias Meyer-Toms](https://twitter.com/artuselias)

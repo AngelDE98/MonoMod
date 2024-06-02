@@ -32,10 +32,39 @@
         ret
     }
 
+    // This exists to work around the fact that on old Mono, the normal string pinning sequence is broken.
+    // See docs/RuntimeIssueNodes.md
+    .method public hidebysig static native int GetRawDataOffset(object obj, uint8& rawData) cil managed aggressiveinlining
+    {
+        .custom instance void System.Runtime.CompilerServices.NullableContextAttribute::.ctor(uint8) = (
+            01 00 01 00 00
+        )
+
+        .maxstack 8
+        .locals init (
+            object pinned str,
+            void*& ptrRef
+        )
+
+        ldarg.1
+        conv.u
+
+        ldarg.0
+        stloc str
+        ldloca str
+        conv.u
+        stloc ptrRef
+        ldloc ptrRef
+        ldind.i
+        sub
+
+        ret
+    }
+
     .method public hidebysig static !!T& UnboxAnyUnsafe<T>(object& 'box') cil managed aggressiveinlining
     {
         .custom instance void System.Runtime.CompilerServices.NullableContextAttribute::.ctor(uint8) = (
-	        01 00 02 00 00
+            01 00 02 00 00
         )
 
         .maxstack 8

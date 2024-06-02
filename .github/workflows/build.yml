@@ -1,0 +1,123 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      osname:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      no-suffix:
+        type: boolean
+        default: false
+      upload-packages:
+        type: boolean
+        default: false
+      upload-tests:
+        type: boolean
+        default: false
+  
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  DOTNET_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    name: Build
+    env:
+      LOG_FILE_NAME: testresults.${{ inputs.os }}.auxtests.trx
+      VersionSuffix: ${{ !inputs.no-suffix && format('daily.{0}', inputs.version) }}
+      DoNotAddSuffix: ${{ inputs.no-suffix && '1' }}
+    steps:
+    - name: Configure git
+      run: |
+        git config --global core.autocrlf input
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        lfs: true
+        submodules: recursive
+
+    # TODO: maybe we can eventually use package locks for package caching?
+    
+    - name: Install .NET SDK
+      uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+      with:
+        global-json: global.json
+        
+    # NOTE: manual package caching
+    - name: Cache restored NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
+        restore-keys: ${{ runner.os }}-nuget-v1-
+
+    - name: Restore
+      run: dotnet restore -bl:restore.binlog -noAutoRsp
+
+    - name: Build
+      run: dotnet build --no-restore -c Release -p:ContinuousIntegrationBuild=true -bl:build.binlog -clp:NoSummary -noAutoRsp
+
+    - name: Pack
+      run: dotnet pack --no-restore -c Release -p:ContinuousIntegrationBuild=true -bl:pack.binlog -clp:NoSummary -noAutoRsp
+
+      # TODO: it might be worth trying to do a "smoketest" test run with the installed tfm to broadly make sure that all builds
+      #       work. We may also want to do a hash check on the packages, though I have no idea how reliable that would be.
+      
+    # TODO: If/when we add other test projects aside from MonoMod.UnitTest, we should run tests here
+    #- name: Run auxiliary tests
+    #  run: dotnet test --no-build -c Release -l:"trx;LogFileName=$($env:LOG_FILE_NAME)" --filter "FullyQualifiedName!~MonoMod.UnitTest"
+    #
+    #- name: Upload test results
+    #  uses: actions/upload-artifact@v4
+    #  if: ${{ always() }}
+    #  with:
+    #    name: test-results aux ${{ runner.os }}
+    #    retention-days: 1
+    #    path: 'TestResults/*.trx'
+    #    if-no-files-found: ignore
+
+    - name: Upload binlogs
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: binlogs-${{ runner.os }}
+        path: '*.binlog'
+        retention-days: 7
+
+    - name: Archive packages
+      uses: actions/upload-artifact@v4
+      if: ${{ inputs.upload-packages }}
+      with:
+        name: packages
+        path: artifacts/package/release/*.nupkg
+
+    - name: Archive packages
+      uses: actions/upload-artifact@v4
+      if: ${{ !inputs.upload-packages }}
+      with:
+        name: packages ${{ runner.os }}
+        path: artifacts/package/release/*.nupkg
+        retention-days: 7
+
+    - name: Upload test assets
+      uses: actions/upload-artifact@v4
+      if: ${{ inputs.upload-tests }}
+      with:
+        name: test-assets
+        retention-days: 1
+        path: |
+          artifacts/bin/MonoMod.UnitTest/*/**/*

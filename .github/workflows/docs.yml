@@ -1,0 +1,86 @@
+name: Docs
+on:
+  push:
+    branches:
+    - reorganize
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  actions: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  DOTNET_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+
+jobs:
+  publish-docs:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Configure git
+      run: |
+        git config --global core.autocrlf input
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        lfs: true
+        submodules: recursive
+        
+    - name: Install .NET SDK
+      uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+      with:
+        global-json: global.json
+        
+    # NOTE: manual package caching
+    - name: Cache restored NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
+        restore-keys: ${{ runner.os }}-nuget-v1-
+
+    - name: Restore
+      run: dotnet restore -bl:restore.binlog -noAutoRsp
+
+    - name: Restore .NET tools
+      run: dotnet tool restore
+
+    - name: Build all projects
+      run: dotnet build -c Release -noAutoRsp -bl:build.binlog -p:RunAnalyzers=false # don't run any analyzers to speed up this build
+
+    - name: Build DocFX project
+      run: dotnet docfx docfx/docfx.json
+
+    - name: Upload binlogs
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: binlogs
+        path: '*.binlog'
+        retention-days: 7
+        
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        # Upload entire repository
+        path: 'docfx/_site'
+    
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

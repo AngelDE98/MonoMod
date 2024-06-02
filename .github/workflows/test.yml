@@ -1,0 +1,118 @@
+name: Test
+
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+  
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  DOTNET_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+  XunitVersion: "2.4.2"
+
+jobs:
+  test:  
+    name: Test
+    runs-on: ${{ fromJSON(inputs.matrix).os.runner }}
+    env:
+      LOG_FILE_NAME: testresults.${{ fromJSON(inputs.matrix).os.runner }}.${{ fromJSON(inputs.matrix).dotnet.id != '' && fromJSON(inputs.matrix).dotnet.id || fromJSON(inputs.matrix).dotnet.sdk }}.${{ fromJSON(inputs.matrix).arch }}
+
+    steps:    
+    - name: Checkout
+      uses: actions/checkout@v4
+      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
+      with:
+        lfs: true
+        submodules: recursive
+        
+    # Note: All of the SDKs we install have to be for the target architecture. Otherwise, we get issues when the default != the target.
+    - name: Install global SDK
+      if: ${{ ! fromJSON(inputs.matrix).dotnet.needsRestore }}
+      uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+      with:
+        architecture: ${{ fromJSON(inputs.matrix).arch }}
+        version: "8.0"
+        
+    - name: Cache restored NuGet packages
+      uses: actions/cache@v4
+      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
+        restore-keys: ${{ runner.os }}-nuget-v1-
+
+    - name: Install restore SDK
+      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
+      uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+      with:
+        architecture: ${{ fromJSON(inputs.matrix).arch }}
+        global-json: global.json
+
+    - name: Restore packages
+      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
+      run: dotnet restore -noAutoRsp
+
+    - name: Download test assets
+      uses: actions/download-artifact@v4
+      with:
+        name: test-assets
+        
+    - name: Install test target runtime
+      if: ${{ fromJSON(inputs.matrix).dotnet.sdk != '' }}
+      uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
+      with:
+        version: ${{ fromJSON(inputs.matrix).dotnet.sdk }}
+        architecture: ${{ fromJSON(inputs.matrix).arch }}
+        runtime: dotnet
+
+    - name: Print SDK info
+      run: dotnet --info
+      
+    - name: Fix runtimeconfig.json probing paths
+      if: ${{ fromJSON(inputs.matrix).dotnet.needsRestore }}
+      run: |
+        ConvertTo-Json @{runtimeOptions=@{additionalProbingPaths=@($env:NUGET_PACKAGES)}} > release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.runtimeconfig.dev.json
+
+    - name: Run tests
+      if: ${{ ! fromJSON(inputs.matrix).dotnet.isMono && ! fromJSON(inputs.matrix).dotnet.pgo }}
+      run: |
+        dotnet test -f ${{ fromJSON(inputs.matrix).dotnet.tfm }} -a ${{ fromJSON(inputs.matrix).arch }} `
+          -l:"trx;LogFileName=$($env:LOG_FILE_NAME).trx" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll
+
+    - name: Run tests (PGO)
+      if: ${{ fromJSON(inputs.matrix).dotnet.pgo }}
+      env:
+        DOTNET_ReadyToRun: ${{ !fromJSON(inputs.matrix).usePgo && 1 || 0 }}
+        DOTNET_TC_QuicJitForLoops: ${{ fromJSON(inputs.matrix).usePgo && 1 || 0 }}
+        DOTNET_TieredPGO: ${{ fromJSON(inputs.matrix).usePgo && 1 || 0 }}
+      run: |
+        dotnet test -f ${{ fromJSON(inputs.matrix).dotnet.tfm }} -a ${{ fromJSON(inputs.matrix).arch }} `
+          -l:"trx;LogFileName=$($env:LOG_FILE_NAME).trx" release_${{ fromJSON(inputs.matrix).dotnet.tfm }}/MonoMod.UnitTest.dll
+          
+    - name: Run tests (Mono)
+      if: ${{ fromJSON(inputs.matrix).dotnet.isMono && fromJSON(inputs.matrix).dotnet.systemMono }}
+      env:
+        TFM: ${{ fromJSON(inputs.matrix).dotnet.tfm }}
+      run: |
+        mono "$($env:NUGET_PACKAGES)/xunit.runner.console/$($env:XunitVersion)/tools/$($env:TFM)/xunit.console.exe" `
+          "release_$($env:TFM)/MonoMod.UnitTest.dll" -junit "$($env:LOG_FILE_NAME).xml"
+
+    # TODO: Non-system Mono
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: test-results ${{ fromJSON(inputs.matrix).title }}
+        retention-days: 1
+        path: |
+          TestResults/*.trx
+          *.xml
+          diaglog.*

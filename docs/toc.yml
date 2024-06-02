@@ -1,0 +1,33 @@
+name: Conceptual Documentation
+href: index.md
+items:
+- name: Debugging With MonoMod
+  href: Debugging.md
+  items:
+  - name: Configuration Switches
+    href: Switches.md
+- name: Per-package
+  items:
+  - name: MonoMod.Core
+    href: Core/toc.yml
+  - name: MonoMod.RuntimeDetour
+    href: RuntimeDetour/toc.yml
+  - name: MonoMod.RuntimeDetour.HookGen
+    href: RuntimeDetour.HookGen/toc.yml
+  - name: MonoMod.Utils
+    href: Utils/toc.yml
+- name: Package READMEs
+  items:
+  - name: MonoMod.Backports
+    href: README.Backports.md
+  - name: MonoMod.ILHelpers
+    href: README.ILHelpers.md
+  - name: MonoMod.Core
+    href: README.Core.md
+  - name: MonoMod.Patcher
+    href: README.Patcher.md
+  - name: MonoMod.RuntimeDetour
+    href: README.RuntimeDetour.md
+  - name: MonoMod.Utils
+    href: README.Utils.md
+- href: RuntimeIssueNotes.md

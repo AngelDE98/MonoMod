@@ -398,7 +398,7 @@ namespace MonoMod.Utils
             if (env == "FALSE")
                 return false;
 
-            fixed (char* pNtdll = "ntdll.dll")
+            fixed (char* pNtdll = "ntdll.dll".AsSpan())
             {
                 var ntdll = Interop.Windows.GetModuleHandleW((ushort*)pNtdll);
                 if (ntdll != Interop.Windows.HMODULE.NULL && ntdll != Interop.Windows.HMODULE.INVALID_VALUE)

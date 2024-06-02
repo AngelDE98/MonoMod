@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <ItemGroup>
+    <None Remove="_site/**/*" />
+    <None Remove="api/**/*" />
+    
+    <None Include="api/.gitignore" />
+    <None Include="api/index.md" />
+  </ItemGroup>
+  
+</Project>

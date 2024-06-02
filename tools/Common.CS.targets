@@ -48,8 +48,12 @@
     <Compile Include="$(MMCommonPath)MethodImplOptionBackportsAlias.cs" Condition="'$(MMMethodImplAlias)' == 'true'">
       <Link>Shared/%(Filename)%(Extension)</Link>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Source Generator reference -->
-    <!-- This is dependent on ReferenceBackports because the source generator will assume the presence of Backports -->
+    <!-- This should be dependent on ReferenceBackports because the source generator will assume the presence of Backports.
+         However, the SourceGen project has some normal analyzers which we want to apply to Backports and Iced as well. -->
     <ProjectReference Include="$(MMSourcePath)MonoMod.SourceGen.Internal\MonoMod.SourceGen.Internal.csproj" Condition="'$(MMUseSourceGen)' != 'false'">
       <Reference>false</Reference>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

@@ -1,4 +1,11 @@
-﻿"use strict";
+"use strict";
+
+// To dump the memory log to a .tmp file
+//   .scriptrun <path-to-this>
+// 
+// To get navigable version of the log
+//   .scriptload <path-to-this>//
+//   dx -g @$scriptContents.GetMMLog()
 
 function initializeScript()
 {
@@ -9,6 +16,29 @@ function initializeScript()
     //     https://aka.ms/JsDbgExt
     //
     return [new host.apiVersionSupport(1, 7)];
+}
+
+function invokeScript()
+{
+	var log = GetMMLog();
+	
+	var dbgOutput = host.diagnostics.debugLog;
+	
+	var file = host.namespace.Debugger.Utility.FileSystem.CreateTempFile();
+	var textWriter = host.namespace.Debugger.Utility.FileSystem.CreateTextWriter(file);
+	
+	dbgOutput("Dumping Memory log to tmp file\n");
+	
+	for (const e of log) {
+		if (e.Index > 0 && e.Index % 1000 == 0)
+			dbgOutput(e.Index + "...\n");
+		
+		textWriter.WriteLine("[" + e.Time + "] [" + e.Source + "] " + e.Level + ": " + e.Message);
+	}
+	
+	file.Close();
+
+    dbgOutput("Dumped MonoMod Log to: " + file.Path);
 }
 
 function GetMMLog()
@@ -235,5 +265,5 @@ function formatDateTime(dt) {
     var date = isUtc
         ? new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds, millis))
         : new Date(year, month - 1, day, hours, minutes, seconds, millis);
-    return date.toLocaleString();
+    return date.toLocaleString().replace(/[^\w:/\\ ]/g, "");
 }

@@ -10,7 +10,7 @@
     <MMIncludeUnsafeAlias>true</MMIncludeUnsafeAlias>
     <MMReferenceUtils>false</MMReferenceUtils>
     <MMMethodImplAlias>true</MMMethodImplAlias>
-    <MMUseSourceGen>false</MMUseSourceGen>
+    <!--<MMUseSourceGen>false</MMUseSourceGen>-->
 
     <_MMTargetFrameworks>$(TargetFrameworks)</_MMTargetFrameworks>
     <_MMDefineConsts>$(DefineConstants)</_MMDefineConsts>

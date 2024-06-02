@@ -12,17 +12,18 @@
     <NoWarn>$(NoWarn);CA1852</NoWarn>
 
     <!-- Put .NET 6.0 as the first framework so that OmniSharp uses it for VS Code Intelisense -->
-    <TargetFrameworks>net6.0;net5.0;net7.0;net8.0;net46;netcoreapp2.1;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
-    <OutputType>Library</OutputType>
+    <TargetFrameworks>net6.0;net5.0;net7.0;net8.0;net462;netcoreapp2.1;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
     <SignAssembly>skip</SignAssembly>
     <Nullable>annotations</Nullable>
 
     <IsPackable>false</IsPackable>
 
+    <OutputType>Library</OutputType>
+
     <XunitVersion Condition="'$(XunitVersion)' == ''">2.4.2</XunitVersion>
     <XunitVsRunnerVersion>$(XunitVersion)</XunitVsRunnerVersion>
     <!-- 2.4.5 drops support for net452 -->
-    <XunitVsRunnerVersion Condition="'$(TargetFramework)' == 'net46'">[2.*,2.4.3]</XunitVsRunnerVersion>
+    <XunitVsRunnerVersion Condition="'$(TargetFramework)' == 'net462'">[2.*,2.4.3]</XunitVsRunnerVersion>
   </PropertyGroup>
 
   <!-- Dependencies -->
@@ -33,11 +34,13 @@
     <Reference Include="0Harmony" HintPath="lib\0Harmony.dll" />
   </ItemGroup>
 
+  <!--
   <ItemGroup>
     <Reference Include="System.Runtime" />
     <Reference Include="System.Runtime.Extensions" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
+  -->
 
   <ItemGroup>
     <ProjectReference Include="..\MonoMod.Core\MonoMod.Core.csproj" />
@@ -51,11 +54,11 @@
 
   <!-- xUnit -->
   <ItemGroup>
-    <PackageReference Include="NETStandard.Library" Version="2.0.0">
+    <!--<PackageReference Include="NETStandard.Library" Version="2.0.0">
       <Version Condition="'$(TargetFramework)' == 'netcoreapp1.0'">1.6.1</Version>
       <Version Condition="'$(TargetFramework)' == 'netcoreapp2.0'">2.0.0</Version>
       <Version Condition="'$(TargetFramework)' == 'netcoreapp2.1'">2.0.3</Version>
-    </PackageReference>
+    </PackageReference>-->
     <PackageReference Include="xunit" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.analyzers" Version="1.*" />
     <PackageReference Include="xunit.core" Version="$(XunitVersion)" />
@@ -67,8 +70,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
     <PackageReference Include="System.IO.FileSystem" Version="4.*" />
+    
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.3" />
+    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="17.3.3" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.3.3" />
   </ItemGroup>
 
 </Project>

@@ -10,7 +10,7 @@
     <MMReferenceBackports>false</MMReferenceBackports>
     <RootNamespace><![CDATA[ ]]></RootNamespace>
 
-    <VersionPrefix>1.1.1</VersionPrefix>
+    <VersionPrefix>1.1.2</VersionPrefix>
     <PackageValidationBaselineVersion>1.1.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 

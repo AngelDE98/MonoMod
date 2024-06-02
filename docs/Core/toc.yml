@@ -1,0 +1,8 @@
+href: index.md
+items:
+- name: Discussion about the CoreCLR JIT hook design
+  href: CoreCLRJitHooks.md
+- name: INativeExceptionHelper
+  href: NativeExceptionHandler.md
+- name: MonoMod.Core's Architecture
+  href: Architecture.md

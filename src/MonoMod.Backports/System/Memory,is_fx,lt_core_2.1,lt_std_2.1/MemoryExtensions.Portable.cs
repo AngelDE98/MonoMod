@@ -278,7 +278,7 @@ namespace System
             if (text == null)
                 return default;
 
-            return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), StringAdjustment, text.Length);
+            return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), StringAdjustmentHolder.StringAdjustment, text.Length);
         }
 
         /// <summary>
@@ -302,7 +302,7 @@ namespace System
             if ((uint)start > (uint)text.Length)
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.start);
 
-            return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), StringAdjustment + start * sizeof(char), text.Length - start);
+            return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), StringAdjustmentHolder.StringAdjustment + start * sizeof(char), text.Length - start);
         }
 
         /// <summary>
@@ -327,7 +327,7 @@ namespace System
             if ((uint)start > (uint)text.Length || (uint)length > (uint)(text.Length - start))
                 ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.start);
 
-            return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), StringAdjustment + start * sizeof(char), length);
+            return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), StringAdjustmentHolder.StringAdjustment + start * sizeof(char), length);
         }
 
         /// <summary>Creates a new <see cref="ReadOnlyMemory{T}"/> over the portion of the target string.</summary>
@@ -384,16 +384,22 @@ namespace System
             return new ReadOnlyMemory<char>(text, start, length);
         }
 
-        internal static readonly nint StringAdjustment = MeasureStringAdjustment();
 
-        private static nint MeasureStringAdjustment()
+        internal static class StringAdjustmentHolder
         {
-            string sampleString = "a";
-            unsafe
+            internal static readonly nint StringAdjustment = MeasureStringAdjustment();
+
+            private static nint MeasureStringAdjustment()
             {
-                fixed (char* pSampleString = sampleString)
+                string sampleString = "a";
+                unsafe
                 {
-                    return Unsafe.ByteOffset<char>(ref Unsafe.As<Pinnable<char>>(sampleString).Data, ref Unsafe.AsRef<char>(pSampleString));
+                    // NOTE: On some old versions of Mono, pinning strings doesn't work, and hard crashes the runtime with an assert. (See docs/RuntimeIssueNodes.md)
+                    // We therefore use a somewhat unusual method of working out the right string adjustment: we have an IL-implemented method for measuring the difference
+                    // between the start of the object and the start of the object data, as measured relative to Pinnable<T>.Data. We can then subtract this amount from
+                    // the normal RuntimeHelpers.OffsetToStringData to get the correct string adjustment.
+                    var offset = (nint)ILHelpers.GetRawDataOffset(sampleString, ref Unsafe.As<Pinnable<byte>>(sampleString).Data);
+                    return RuntimeHelpers.OffsetToStringData - offset;
                 }
             }
         }

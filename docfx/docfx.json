@@ -1,0 +1,91 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "..",
+          "files": [
+            "src/**/MonoMod*.csproj"
+          ],
+          "exclude": [
+            "**/MonoMod.FrameworkTests.*",
+            "**/MonoMod.SourceGen.*.*",
+            "**/MonoMod.UnitTest.*",
+            "**/MonoMod.Backports.Tasks.*",
+            "**/MonoMod.Patcher.*",
+            "**/MonoMod.ILHelpers.Patcher.*",
+            "**/MonoMod.DebugIL.*",
+            "**/MonoMod.RuntimeDetour.HookGen.*"
+          ]
+        }
+      ],
+      "dest": "api",
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "shouldSkipMarkup": true,
+      "outputFormat": "mref",
+      "filter": "filterConfig.yml",
+      "categoryLayout": "nested",
+      "namespaceLayout": "flattened",
+      "memberLayout": "separatePages",
+      "enumSortOrder": "declaringOrder"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "api/**.yml",
+          "api/index.md"
+        ]
+      },
+      {
+        "files": [
+          "articles/**.md",
+          "articles/**/toc.yml",
+          "toc.yml",
+          "*.md"
+        ]
+      },
+      {
+        "src": "../docs",
+        "dest": "docs",
+        "files": [
+          "**.md",
+          "**/toc.yml"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**",
+          "CNAME"
+        ]
+      }
+    ],
+    "overwrite": [
+      {
+        "files": [
+          "apidoc/**.md"
+        ],
+        "exclude": [
+          "obj/**",
+          "_site/**"
+        ]
+      }
+    ],
+    "dest": "_site",
+    "globalMetadataFiles": ["globalmeta.json"],
+    "fileMetadataFiles": [],
+    "template": [
+      "default", "modern"
+    ],
+    "postProcessors": ["ExtractSearchIndex"],
+    "markdownEngineName": "markdig",
+    "noLangKeyword": false,
+    "keepFileLink": false,
+    "cleanupCacheHistory": false,
+    "disableGitFeatures": false
+  }
+}

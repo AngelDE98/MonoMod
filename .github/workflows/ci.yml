@@ -1,0 +1,94 @@
+name: Build and Test
+on:
+  push:
+  pull_request:
+  
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  DOTNET_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+  NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+
+# We'll have a job for building (that runs on x64 machines only, one for each OS to make sure it actually builds)
+# Then, we'll take the result from one of those (probaly Linux) and distribute build artifacts to testers to run
+# a load of tests. This will (eventually) include ARM runners, where possible.
+jobs:
+  event_file:
+    # This job uploads an event file so that our test aggregator and recorder can understand this event
+    name: "Event File"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-event-file
+        path: ${{ github.event_path }}
+        retention-days: 1
+  
+  compute-version:
+    name: Compute Version
+    runs-on: ubuntu-latest
+    outputs:
+      ver: ${{ steps.computever.outputs.ver }}
+    steps:
+    - id: computever
+      run: echo "ver=$(Get-Date -Format y.M.d).${{ github.run_number }}.${{ github.run_attempt }}" >> $env:GITHUB_OUTPUT
+      
+  compute-test-matrix:
+    name: Compute Test Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.compute-matrix.outputs.matrix }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        lfs: false
+        submodules: false
+    - name: Compute test matrix
+      id: compute-matrix
+      run: ./.github/gen-test-matrix.ps1 -MatrixOutName matrix -GithubOutput $env:GITHUB_OUTPUT
+  
+  build-testassets:
+    needs: compute-version
+    name: 'Build #${{ needs.compute-version.outputs.ver }} (Linux)'
+    uses: ./.github/workflows/build.yml
+    with:
+      os: ubuntu-latest
+      osname: Linux
+      version: ${{ needs.compute-version.outputs.ver }}
+      upload-packages: true
+      upload-tests: true
+
+  build:
+    needs: compute-version
+    strategy:
+      matrix:
+        os: [windows-latest, macos-13]
+        include:
+        - os: windows-latest
+          name: Windows
+        - os: macos-13
+          name: MacOS
+          
+    name: 'Build #${{ needs.compute-version.outputs.ver }} (${{ matrix.name }})'
+    uses: ./.github/workflows/build.yml
+    with:
+      os: ${{ matrix.os }}
+      osname: ${{ matrix.name }}
+      version: ${{ needs.compute-version.outputs.ver }}
+      upload-packages: false
+      upload-tests: false
+      
+  test:
+    needs: [compute-test-matrix, build-testassets]
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.compute-test-matrix.outputs.matrix) }}
+    uses: ./.github/workflows/test.yml
+    name: Test ${{ matrix.title }}
+    with:
+      matrix: ${{ toJSON(matrix) }}

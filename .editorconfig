@@ -4,6 +4,9 @@ root = true
 end_of_line = lf
 indent_style = space
 
+[*.yml]
+indent_size = 2
+
 [*.{csproj,ilproj,props,targets}]
 indent_size = 2
 

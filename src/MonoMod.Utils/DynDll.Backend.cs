@@ -181,7 +181,7 @@ namespace MonoMod.Utils
                 }
                 else
                 {
-                    fixed (char* pName = name)
+                    fixed (char* pName = name.AsSpan())
                     {
                         handle = result = Interop.Windows.LoadLibraryW((ushort*)pName);
                     }
