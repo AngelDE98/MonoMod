@@ -1,4 +1,4 @@
-﻿using Mono.Cecil.Cil;
+using Mono.Cecil.Cil;
 using MonoMod.Backports;
 using MonoMod.Core.Utils;
 using MonoMod.Logs;
@@ -629,106 +629,120 @@ namespace MonoMod.Core.Platforms
             Helpers.ThrowIfArgumentNull(from);
             Helpers.ThrowIfArgumentNull(to);
 
+            // TODO: check that `from` and `to` are actually argument- and return-compatible.
+            // When we use this method internally, all the necessary checks are already performed
+            // elsewhere, so we do not need to repeat them here. However, this method is part of
+            // the public API, and currently, it produces faulty results for unsanitized inputs.
+            // So, maybe we should do something about that.
+
             to = GetIdentifiable(to);
+            if (from is not MethodInfo fromInfo || to is not MethodInfo toInfo)
+                return to;
 
-            // TODO: check that from and to are actually argument- and return-compatible
-            // this check would ensure that to is only non-static when that makes sense
+            // Whenever we detour a call from an instance method to a static one, `this` needs to
+            // change its position to morph into a simple argument. Otherwise, it will be swapped
+            // with the return buffer, causing a spectacular failure on the callee side:
+            //
+            // Argument order for the instance method: [ThisPointer,  ReturnBuffer, UserArguments]
+            // Argument order for the static method:   [ReturnBuffer, ThisPointer,  UserArguments]
+            //
+            // Note that this fixup is only relevant when there is a return buffer between `this`
+            // and the user arguments to begin with. Otherwise, both instance and static methods
+            // will have the exact same effective argument order: [ThisPointer, UserArguments].
+            // A return buffer is only present in scenarios where a value is returned by reference.
+            //
+            // Consequently, there is no need for a fixup for ABIs that declare argument order
+            // like this: [ReturnBuffer, ThisPointer, UserArguments] (e.g., Mono on Linux).
+            // While there is no need, there is also no harm in applying it anyways, as it will
+            // act as a simple passthrough.
+            // However, TODO: this scenario can be optimized out of existence.
+            var returnType = fromInfo.ReturnType;
+            var hasReturnBuffer = Abi.Classify(returnType, true) is TypeClassification.ByReference;
+            var hasThis = !fromInfo.IsStatic;
+            var requiresReturnBufferFixup = hasThis && toInfo.IsStatic && hasReturnBuffer;
 
-            if (from is MethodInfo fromInfo &&
-                to is MethodInfo toInfo &&
-                !fromInfo.IsStatic && to.IsStatic)
+            // Check if a fixup is needed for the current scenario.
+            if (!requiresReturnBufferFixup)
             {
-                var retType = fromInfo.ReturnType;
-                // if from has `this` and to doesn't, then we need to fix up the abi
-                var returnClass = Abi.Classify(retType, true);
-
-                // only if the return class is ByRef do we need to do something
-                // TODO: perform better decisions based on the ABI argument order and return class
-                if (returnClass == TypeClassification.ByReference)
-                {
-                    var thisType = from.GetThisParamType();
-                    var retPtrType = retType.MakeByRefType();
-
-                    var newRetType = Abi.ReturnsReturnBuffer ? retPtrType : typeof(void);
-
-                    int thisPos = -1, retBufPos = -1, argOffset = -1;
-
-                    var paramList = from.GetParameters();
-
-                    var argTypes = new List<Type>();
-                    var order = Abi.ArgumentOrder.Span;
-                    for (var i = 0; i < order.Length; i++)
-                    {
-                        var kind = order[i];
-
-                        if (kind == SpecialArgumentKind.ThisPointer)
-                        {
-                            thisPos = argTypes.Count;
-                            argTypes.Add(thisType);
-                        }
-                        else if (kind == SpecialArgumentKind.ReturnBuffer)
-                        {
-                            retBufPos = argTypes.Count;
-                            argTypes.Add(retPtrType);
-                        }
-                        else if (kind == SpecialArgumentKind.UserArguments)
-                        {
-                            argOffset = argTypes.Count;
-                            argTypes.AddRange(paramList.Select(p => p.ParameterType));
-                        }
-
-                        // TODO: somehow handle generic context parameters
-                        // or more likely, just ignore it for this and do generics elsewhere
-                    }
-
-                    Helpers.DAssert(thisPos >= 0);
-                    Helpers.DAssert(retBufPos >= 0);
-                    Helpers.DAssert(argOffset >= 0);
-
-                    using (var dmd = new DynamicMethodDefinition(
-                        DebugFormatter.Format($"Glue:AbiFixup<{from},{to}>"),
-                        newRetType, argTypes.ToArray()
-                    ))
-                    {
-                        // TODO: make DMD apply attributes to the generated DynamicMethod, when possible
-                        dmd.Definition!.ImplAttributes |= Mono.Cecil.MethodImplAttributes.NoInlining |
-                            (Mono.Cecil.MethodImplAttributes)(int)MethodImplOptionsEx.AggressiveOptimization;
-
-                        var il = dmd.GetILProcessor();
-
-                        // load return buffer
-                        il.Emit(OpCodes.Ldarg, retBufPos);
-
-                        // load thisptr
-                        il.Emit(OpCodes.Ldarg, thisPos);
-
-                        // load user arguments
-                        for (var i = 0; i < paramList.Length; i++)
-                        {
-                            il.Emit(OpCodes.Ldarg, i + argOffset);
-                        }
-
-                        // call the target method
-                        il.Emit(OpCodes.Call, il.Body.Method.Module.ImportReference(to));
-
-                        // store the returned object
-                        il.Emit(OpCodes.Stobj, il.Body.Method.Module.ImportReference(retType));
-
-                        // if we need to return the pointer, do that
-                        if (Abi.ReturnsReturnBuffer)
-                        {
-                            il.Emit(OpCodes.Ldarg, retBufPos);
-                        }
-
-                        // then we're done
-                        il.Emit(OpCodes.Ret);
-
-                        return dmd.Generate();
-                    }
-                }
+                // `from` and `to` are considered compatible at this point.
+                // Thus, no ABI fixups are needed, return `to` as is.
+                return to;
             }
 
-            return to;
+            var returnBufferType = hasReturnBuffer ? returnType.MakeByRefType() : returnType;
+            var newReturnType = hasReturnBuffer && !Abi.ReturnsReturnBuffer ? typeof(void) : returnBufferType;
+
+            var thisPos = -1;
+            var returnBufferPos = -1;
+            var userArgumentsOffset = -1;
+            var parameters = from.GetParameters();
+            var argumentTypes = new List<Type>(parameters.Length + 3);
+            var argumentKinds = Abi.ArgumentOrder.Span;
+            for (var i = 0; i < argumentKinds.Length; i++)
+            {
+                switch (argumentKinds[i])
+                {
+                    case SpecialArgumentKind.ThisPointer when hasThis:
+                        thisPos = argumentTypes.Count;
+                        argumentTypes.Add(from.GetThisParamType());
+                        break;
+
+                    case SpecialArgumentKind.ReturnBuffer when hasReturnBuffer:
+                        returnBufferPos = argumentTypes.Count;
+                        argumentTypes.Add(returnBufferType);
+                        break;
+
+                    case SpecialArgumentKind.UserArguments:
+                        userArgumentsOffset = argumentTypes.Count;
+                        argumentTypes.AddRange(parameters.Select(static p => p.ParameterType));
+                        break;
+                }
+
+                // TODO: somehow handle generic context parameters
+                // or more likely, just ignore it for this and do generics elsewhere
+            }
+
+            Helpers.DAssert(thisPos >= 0 || !hasThis);
+            Helpers.DAssert(returnBufferPos >= 0 || !hasReturnBuffer);
+            Helpers.DAssert(userArgumentsOffset >= 0);
+
+            using var dmd = new DynamicMethodDefinition(
+                DebugFormatter.Format($"Glue:AbiFixup<{from},{to}>"),
+                newReturnType, argumentTypes.ToArray()
+            );
+            // TODO: make DMD apply attributes to the generated DynamicMethod, when possible
+            dmd.Definition!.ImplAttributes |= Mono.Cecil.MethodImplAttributes.NoInlining |
+                (Mono.Cecil.MethodImplAttributes)(int)MethodImplOptionsEx.AggressiveOptimization;
+
+            var il = dmd.GetILProcessor();
+
+            // load return buffer
+            if (hasReturnBuffer)
+                il.Emit(OpCodes.Ldarg, returnBufferPos);
+
+            // load thisptr
+            if (hasThis)
+                il.Emit(OpCodes.Ldarg, thisPos);
+
+            // load user arguments
+            for (var i = 0; i < parameters.Length; i++)
+                il.Emit(OpCodes.Ldarg, i + userArgumentsOffset);
+
+            // call the target method
+            il.Emit(OpCodes.Call, il.Body.Method.Module.ImportReference(to));
+
+            // store the returned object
+            if (hasReturnBuffer)
+                il.Emit(OpCodes.Stobj, il.Body.Method.Module.ImportReference(returnType));
+
+            // if we need to return the pointer, do that
+            if (hasReturnBuffer && Abi.ReturnsReturnBuffer)
+                il.Emit(OpCodes.Ldarg, returnBufferPos);
+
+            // then we're done
+            il.Emit(OpCodes.Ret);
+
+            return dmd.Generate();
         }
     }
 }
