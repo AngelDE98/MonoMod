@@ -661,8 +661,35 @@ namespace MonoMod.Core.Platforms
             var hasThis = !fromInfo.IsStatic;
             var requiresReturnBufferFixup = hasThis && toInfo.IsStatic && hasReturnBuffer;
 
+            // Whenever we detour a call from a generic method, depending on the ABI, we may
+            // receive a generic context as an argument, which a callee never needs, at least
+            // in the form of an explicitly passed argument, even if it is also a generic method.
+            // The reason here is simple: we do NOT allow specifying a generic method definition
+            // as a detour target (while that would make sense from a user's perspective, it
+            // requires much more work to function properly), thus, `to` can only be
+            // a constructed generic method with its generic context baked in.
+            // This leads to a pretty bad discrepancy:
+            //
+            // Caller's argument order: [ThisPointer, ReturnBuffer, GenericContext, UserArguments]
+            // Callee's argument order: [ThisPointer, ReturnBuffer, UserArguments]
+            //
+            // Because of this, the callee will receive a pointer to the generic context information
+            // instead of its first argument, causing all subsequent arguments to be shifted by one,
+            // resulting in all types of phantasmagorical problems that will immediately blow up in
+            // the user's face. Moreover, to add insult to injury, there is no way to access
+            // the last argument, although this is the least of our concerns here.
+            //
+            // Note that we only need this fixup if the current ABI explicitly defines the generic
+            // context as an argument. For example, Mono on Windows/Wine x86_64 stores a pointer to
+            // the generic context struct in r10, so generic injections somewhat work there already.
+            //
+            // Consequently, there is no need for a fixup for ABIs that declare `GenericContext`
+            // **after** `UserArguments`. However, as far as I know, this is only relevant for
+            // RyuJITx86, so there is no value in optimizing for that scenario.
+            var requiresGenericContextFixup = HasGenericContext(Abi) && RequiresGenericContext(fromInfo);
+
             // Check if a fixup is needed for the current scenario.
-            if (!requiresReturnBufferFixup)
+            if (!requiresReturnBufferFixup && !requiresGenericContextFixup)
             {
                 // `from` and `to` are considered compatible at this point.
                 // Thus, no ABI fixups are needed, return `to` as is.
@@ -692,14 +719,45 @@ namespace MonoMod.Core.Platforms
                         argumentTypes.Add(returnBufferType);
                         break;
 
+                    case SpecialArgumentKind.GenericContext when requiresGenericContextFixup:
+                        // Currently, we do the bare minimum: we acknowledge that
+                        // the generic context exists. That's all. After that,
+                        // we simply throw it out of the window and rely on
+                        // the generic context (if any) baked into in the callee.
+                        //
+                        // While this does work fine, it introduces funny little
+                        // holes in the type-safety premise of .NET:
+                        //
+                        // // This may return `false`!
+                        // bool Hook<T>(T it)
+                        //     => typeof(T).IsAssignableFrom(it.GetType());
+                        //
+                        // This behavior is caused by the fact that constructed
+                        // generics for reference types are Javad into a single
+                        // definition at runtime (and rightfully so).
+                        // So, even if you try to detour a specific generic
+                        // implementation using something like
+                        // `to.MakeGenericMethod(typeof(string))`,
+                        // your hook will receive calls for all
+                        // reference type-based implementations out there.
+                        // However, since we do not patch the generic context
+                        // of the provided hook, it remains unchanged,
+                        // causing `typeof(T)` to defy users' expectations.
+                        //
+                        // So, TODO: patch the generic context of the detour target
+                        // and/or introduce a call filter based on the current context.
+
+                        // The generic context is passed as a pointer to a struct that
+                        // contains all the needed (?) information.
+                        // We can treat it as a simple `IntPtr`.
+                        argumentTypes.Add(typeof(nint));
+                        break;
+
                     case SpecialArgumentKind.UserArguments:
                         userArgumentsOffset = argumentTypes.Count;
                         argumentTypes.AddRange(parameters.Select(static p => p.ParameterType));
                         break;
                 }
-
-                // TODO: somehow handle generic context parameters
-                // or more likely, just ignore it for this and do generics elsewhere
             }
 
             Helpers.DAssert(thisPos >= 0 || !hasThis);
@@ -743,6 +801,62 @@ namespace MonoMod.Core.Platforms
             il.Emit(OpCodes.Ret);
 
             return dmd.Generate();
+        }
+
+        private static bool HasGenericContext(Abi abi)
+        {
+            var arguments = abi.ArgumentOrder.Span;
+            for (var i = 0; i < arguments.Length; i++)
+            {
+                if (arguments[i] is SpecialArgumentKind.GenericContext)
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool RequiresGenericContext(MethodBase method)
+        {
+            // If neither the method nor its declaring type is generic,
+            // we do not need to worry about the generic context at all.
+            var declaringType = method.DeclaringType ?? typeof(object);
+            if (!method.IsGenericMethod && !declaringType.IsGenericType)
+                return false;
+
+            // If the method itself is generic, check whether at least one
+            // of its generic arguments makes it a shared instantiation.
+            var methodGenericArguments = method.IsGenericMethod ? method.GetGenericArguments() : Type.EmptyTypes;
+            if (methodGenericArguments.Any(static x => !x.IsValueType))
+                return true;
+
+            // If the method is effectively generic (i.e., it is defined on a generic type),
+            // we need to determine whether it still requires a hidden argument in the form
+            // of a MethodDesc, MethodTable, or TypeHandle pointer, or if `this` alone will
+            // suffice for this purpose.
+            //
+            // The rules are as follows:
+            //  - If both the method and its declaring type are generic, `this` alone cannot
+            //    provide the generic context the VM needs. In such cases,
+            //    we require a hidden argument for shared instantiations.
+            //  - If the method is static, there is obviously no `this` from which
+            //    the VM could infer the generic context.
+            //  - If `this` is a value type, the unboxed `this` pointer, by definition,
+            //    does not have an associated MethodTable pointer.
+            //  - If the method is a default interface method called via interface dispatch,
+            //    the VM cannot use `this` to derive the generic context because it is too
+            //    ambiguous (e.g., it may implement multiple IFoo<T> interfaces).
+            //
+            // See:
+            // https://github.com/dotnet/runtime/blob/55eee324653e01cf28809d02b25a5b0894b58d22/src/coreclr/vm/method.cpp#L1649
+            var mayNeedHiddenArg = method.IsGenericMethod
+                || method.IsStatic
+                || declaringType.IsValueType
+                || declaringType.IsInterface && !method.IsAbstract;
+            if (!mayNeedHiddenArg)
+                return false;
+
+            // Finally, check whether the type on which the method is defined may be shared.
+            var typeGenericArguments = declaringType.IsGenericType ? declaringType.GetGenericArguments() : Type.EmptyTypes;
+            return typeGenericArguments.Any(static x => !x.IsValueType);
         }
     }
 }
