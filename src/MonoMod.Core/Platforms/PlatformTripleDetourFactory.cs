@@ -206,7 +206,7 @@ namespace MonoMod.Core.Platforms
             #endregion
         }
 
-        private sealed class Detour : DetourBase, ICoreDetour
+        private sealed class Detour : DetourBase, ICoreDetour, ICoreDetourWithClone
         {
             private readonly MethodBase realTarget;
 

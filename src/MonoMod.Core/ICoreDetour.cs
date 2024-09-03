@@ -17,8 +17,19 @@ namespace MonoMod.Core
         /// The target method.
         /// </summary>
         MethodBase Target { get; }
+    }
+
+    /// <summary>
+    /// An <see cref="ICoreDetour"/> that additionally provides <see cref="SourceMethodClone"/>.
+    /// </summary>
+    /// <remarks>
+    /// An <see cref="ICoreDetour"/> may implement this interface without actually providing a source clone.
+    /// </remarks>
+    /// <seealso cref="CreateDetourRequest.CreateSourceClone"/>
+    public interface ICoreDetourWithClone : ICoreDetour
+    {
         /// <summary>
-        /// A clone of <see cref="Source"/>, which behaves as-if it had not been detoured.
+        /// A clone of <see cref="ICoreDetour.Source"/>, which behaves as-if it had not been detoured.
         /// </summary>
         /// <remarks>
         /// This method will not be available unless <see cref="CreateDetourRequest.CreateSourceClone"/> was

@@ -44,15 +44,17 @@ namespace MonoMod.Core
 
         /// <summary>
         /// Gets or sets whether the detour factory should create a clone of <see cref="Source"/> which, when called, behaves as-if
-        /// the source was not detoured. If the <see cref="IDetourFactory"/> supports this, the clone will be available from
-        /// <see cref="ICoreDetour.SourceMethodClone"/>.
+        /// the source was not detoured. If the <see cref="IDetourFactory"/> supports this, the created <see cref="ICoreDetour"/> will
+        /// implement <see cref="ICoreDetourWithClone"/>, and the clone will be available from <see cref="ICoreDetourWithClone.SourceMethodClone"/>.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The <see cref="IDetourFactory"/> is not obligated to respect this option; it is permitted to ignore it. Clients which
         /// require this behavior should have a fallback path which performs a best-effort IL clone using <see cref="DynamicMethodDefinition"/>
         /// or another similar method.
+        /// </para>
         /// </remarks>
-        /// <seealso cref="ICoreDetour.SourceMethodClone"/>
+        /// <seealso cref="ICoreDetourWithClone.SourceMethodClone"/>
         /// <seealso cref="DynamicMethodDefinition(MethodBase)"/>
         public bool CreateSourceClone { get; init; }
     }
