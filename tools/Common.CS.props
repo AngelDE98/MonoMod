@@ -40,7 +40,7 @@
     <NewCecilVersion>0.11.5</NewCecilVersion>
     <OldCecilVersion>0.10.4</OldCecilVersion>
     
-    <RoslynVersion>4.9.2</RoslynVersion>
+    <RoslynVersion>4.11.0</RoslynVersion>
     <MSBuildRequiredVersion>17.8.3</MSBuildRequiredVersion>
   </PropertyGroup>
 

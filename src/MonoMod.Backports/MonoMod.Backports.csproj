@@ -51,7 +51,8 @@
     
     <!-- System.ValueTuple`* -->
     <PackageReference Include="System.ValueTuple" Version="4.5.0" Condition="!('$(MMTFKind)' == '.NETStandard' and $([MSBuild]::VersionGreaterThanOrEquals('$(MMTFVersion)','2.0')))
-      and !('$(MMTFKind)' == '.NETFramework' and $([MSBuild]::VersionGreaterThanOrEquals('$(MMTFVersion)','4.7')))&#xA;                      and !('$(MMTFKind)' == '.NETCoreApp')" />
+      and !('$(MMTFKind)' == '.NETFramework' and $([MSBuild]::VersionGreaterThanOrEquals('$(MMTFVersion)','4.7')))
+      and !('$(MMTFKind)' == '.NETCoreApp')" />
   </ItemGroup>
 
   <!-- For some unknown reason, MS.BCL.HashCode causes compilation issues on older runtimes...

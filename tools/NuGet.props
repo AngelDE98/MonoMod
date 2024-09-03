@@ -38,7 +38,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <!-- NuGetizer for better control over NuGet package generation with dotnet pack -->
-    <PackageReference Include="UnNuGetizer" Version="1.1.0">
+    <PackageReference Include="NuGetizer" Version="1.2.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
