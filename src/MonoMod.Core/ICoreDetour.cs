@@ -25,18 +25,18 @@ namespace MonoMod.Core
     /// <remarks>
     /// An <see cref="ICoreDetour"/> may implement this interface without actually providing a source clone.
     /// </remarks>
-    /// <seealso cref="CreateDetourRequest.CreateSourceClone"/>
+    /// <seealso cref="CreateDetourRequest.CreateSourceCloneIfNotILCopy"/>
     public interface ICoreDetourWithClone : ICoreDetour
     {
         /// <summary>
         /// A clone of <see cref="ICoreDetour.Source"/>, which behaves as-if it had not been detoured.
         /// </summary>
         /// <remarks>
-        /// This method will not be available unless <see cref="CreateDetourRequest.CreateSourceClone"/> was
+        /// This method will not be available unless <see cref="CreateDetourRequest.CreateSourceCloneIfNotILCopy"/> was
         /// set when the detour was created. If the <see cref="IDetourFactory"/> does not support that option,
         /// this may not be set anyway.
         /// </remarks>
-        /// <seealso cref="CreateDetourRequest.CreateSourceClone"/>
+        /// <seealso cref="CreateDetourRequest.CreateSourceCloneIfNotILCopy"/>
         MethodInfo? SourceMethodClone { get; }
     }
 }
