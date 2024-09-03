@@ -33,7 +33,15 @@ namespace MonoMod.Core.Platforms
             if (!triple.TryDisableInlining(request.Source))
                 MMDbgLog.Warning($"Could not disable inlining of method {request.Source}; detours may not be reliable");
 
-            var detour = new Detour(triple, request.Source, request.Target);
+            MethodInfo? srcClone = null;
+            if (request.CreateSourceClone)
+            {
+                // the caller wants a clone of the source method
+                using var dmd = new DynamicMethodDefinition(request.Source);
+                srcClone = dmd.Generate();
+            }
+
+            var detour = new Detour(triple, request.Source, request.Target, srcClone);
             if (request.ApplyByDefault)
             {
                 detour.Apply();
@@ -280,10 +288,11 @@ namespace MonoMod.Core.Platforms
 
             private new ManagedDetourBox DetourBox => GetDetourBox<ManagedDetourBox>();
 
-            public Detour(PlatformTriple triple, MethodBase src, MethodBase dst) : base(triple)
+            public Detour(PlatformTriple triple, MethodBase src, MethodBase dst, MethodInfo? srcClone) : base(triple)
             {
                 Source = triple.GetIdentifiable(src);
                 Target = dst;
+                SourceMethodClone = srcClone;
 
                 realTarget = triple.GetRealDetourTarget(src, dst);
 
@@ -386,6 +395,8 @@ namespace MonoMod.Core.Platforms
             public MethodBase Source { get; }
 
             public MethodBase Target { get; }
+
+            public MethodInfo? SourceMethodClone { get; }
 
             // These fields are disposed if needed, just through some more indirections than is typical.
 #pragma warning disable CA2213 // Disposable fields should be disposed

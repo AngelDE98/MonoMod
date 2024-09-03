@@ -168,7 +168,7 @@ namespace MonoMod.RuntimeDetour
 
             public readonly MethodSignature Sig;
             public readonly ManagedDetourSyncInfo SyncInfo = new();
-            public readonly ConcurrentQueue<Action> StolenTrampolineReturners = new ConcurrentQueue<Action>();
+            public readonly ConcurrentQueue<Action> StolenTrampolineReturners = new();
             private readonly DataScope<DynamicReferenceCell> syncProxyRefScope;
 
             public bool HasILHook;
