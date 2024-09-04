@@ -28,12 +28,12 @@ namespace MonoMod.Utils
 
         // If SRE has been stubbed out, prefer Cecil.
         private static bool _PreferCecil =
-            (PlatformDetection.Runtime is RuntimeKind.Mono && (
+            (PlatformDetection.Runtime is RuntimeKind.Mono &&
                 // Mono 4.X+
                 !_IsNewMonoSRE &&
                 // Unity pre 2018
                 !_IsOldMonoSRE
-            )) ||
+            ) ||
 
             (PlatformDetection.Runtime is not RuntimeKind.Mono && (
                 // .NET
@@ -78,6 +78,19 @@ namespace MonoMod.Utils
             Debug = GetDefaultDebugValue();
 
             LoadFromMethod(method, out var module, out var definition);
+            Module = module;
+            Definition = definition;
+        }
+
+        public DynamicMethodDefinition(DynamicMethodDefinition method)
+        {
+            Helpers.ThrowIfArgumentNull(method);
+
+            OriginalMethod = null;
+            Debug = GetDefaultDebugValue();
+
+            Name = method.Name;
+            CreateFromDmd(method, out var module, out var definition);
             Module = module;
             Definition = definition;
         }
@@ -135,6 +148,30 @@ namespace MonoMod.Utils
             foreach (var paramType in parameterTypes)
                 def.Parameters.Add(new ParameterDefinition(module.ImportReference(paramType)));
             type.Methods.Add(def);
+        }
+
+        private void CreateFromDmd(DynamicMethodDefinition src, out ModuleDefinition Module, out MethodDefinition Definition)
+        {
+            var module = Module = ModuleDefinition.CreateModule($"DMD:DynModule<{src.Name}>?{GetHashCode()}", new ModuleParameters()
+            {
+                Kind = ModuleKind.Dll,
+                ReflectionImporterProvider = MMReflectionImporter.ProviderNoDefault
+            });
+
+            var type = new TypeDefinition(
+                "",
+                $"DMD<{src.Name}>?{GetHashCode()}",
+                Mono.Cecil.TypeAttributes.Public | Mono.Cecil.TypeAttributes.Class);
+            module.Types.Add(type);
+
+            var def = new MethodDefinition(
+                src.Name,
+                Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig | Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.Static,
+                module.ImportReference(src.Definition.ReturnType));
+            type.Methods.Add(def);
+
+            def = Definition = src.Definition.Clone(def);
+            def.DeclaringType = type;
         }
 
         private void LoadFromMethod(MethodBase orig, out ModuleDefinition Module, out MethodDefinition def)
@@ -220,8 +257,7 @@ namespace MonoMod.Utils
             // https://github.com/dotnet/coreclr/issues/1764
 #if NETFRAMEWORK
             if (Definition!.Body.ExceptionHandlers.Any(eh =>
-                eh.HandlerType == ExceptionHandlerType.Fault ||
-                eh.HandlerType == ExceptionHandlerType.Filter
+                eh.HandlerType is ExceptionHandlerType.Fault or ExceptionHandlerType.Filter
             ))
                 return DMDEmitMethodBuilderGenerator.Generate(this, context);
 #endif

@@ -49,7 +49,7 @@ namespace MonoMod.Core
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The <see cref="IDetourFactory"/> should only generate a clone if that clone is not strictly an IL copy.
+        /// The <see cref="IDetourFactory"/> should only generate a clone if that clone is not strictly an IL clone.
         /// </para>
         /// <para>
         /// The <see cref="IDetourFactory"/> is not obligated to respect this option; it is permitted to ignore it. Clients which
@@ -59,7 +59,7 @@ namespace MonoMod.Core
         /// </remarks>
         /// <seealso cref="ICoreDetourWithClone.SourceMethodClone"/>
         /// <seealso cref="DynamicMethodDefinition(MethodBase)"/>
-        public bool CreateSourceCloneIfNotILCopy { get; init; }
+        public bool CreateSourceCloneIfNotILClone { get; init; }
     }
 
     /// <summary>

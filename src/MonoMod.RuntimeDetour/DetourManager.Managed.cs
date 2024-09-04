@@ -199,7 +199,6 @@ namespace MonoMod.RuntimeDetour
                 syncProxyRefScope = refScope;
             }
 
-            private MethodInfo? sourceClone;
             private ICoreDetour? syncDetour;
 
             public override void UpdateDetour(IDetourFactory factory, MethodBase fallback)
@@ -220,32 +219,40 @@ namespace MonoMod.RuntimeDetour
                 }
             }
 
-            public void PrepareDetour(IDetourFactory factory, out MethodInfo sourceClone)
+            private MethodInfo? sourceClone;
+            private DynamicMethodDefinition? sourceCloneIl;
+
+            public void PrepareDetour(IDetourFactory factory, out MethodInfo sourceClone, out DynamicMethodDefinition? sourceCloneIl)
             {
                 if (syncDetour is null)
                 {
                     var detour = syncDetour = factory.CreateDetour(new(Entry, SyncInfo.SyncProxy!)
                     {
                         ApplyByDefault = false,
-                        CreateSourceCloneIfNotILCopy = true,
+                        CreateSourceCloneIfNotILClone = true,
                     });
 
-                    if (detour is ICoreDetourWithClone { SourceMethodClone: { } clone })
+                    if (detour is ICoreDetourWithClone { SourceMethodClone: { } clone } detourWithClone)
                     {
                         // if a clone was created here, then it's not an IL-copy, and we have no choice but to throw away the old one.
                         sourceClone = this.sourceClone = clone;
+
+                        this.sourceCloneIl?.Dispose();
+                        sourceCloneIl = this.sourceCloneIl = detourWithClone.SourceMethodCloneIL;
                     }
                     else
                     {
                         // need to manually create the source clone
                         // we only do this if we don't already have one though, because we don't want to re-copy the IL body
-                        sourceClone = this.sourceClone ??= Entry.CreateILCopy();
+                        sourceCloneIl = this.sourceCloneIl ??= new DynamicMethodDefinition(Entry);
+                        sourceClone = this.sourceClone ??= sourceCloneIl.Generate();
                     }
                 }
                 else
                 {
                     Helpers.Assert(this.sourceClone is not null);
                     sourceClone = this.sourceClone;
+                    sourceCloneIl = this.sourceCloneIl;
                 }
             }
         }
@@ -280,6 +287,7 @@ namespace MonoMod.RuntimeDetour
         {
             public readonly MethodBase Source;
             public MethodInfo? SourceClone;
+            public DynamicMethodDefinition? SourceCloneIl;
             public MethodInfo? EndOfChain;
 
             public ManagedDetourState(MethodBase src)
@@ -542,7 +550,7 @@ namespace MonoMod.RuntimeDetour
 
             private void PrepareEndOfChain(IDetourFactory factory)
             {
-                detourList.PrepareDetour(factory, out SourceClone);
+                detourList.PrepareDetour(factory, out SourceClone, out SourceCloneIl);
                 EndOfChain ??= SourceClone;
             }
 
@@ -557,9 +565,14 @@ namespace MonoMod.RuntimeDetour
                     return;
                 }
 
+                if (SourceCloneIl is null)
+                {
+                    throw new InvalidOperationException("Target method cannot be ILHooked");
+                }
+
                 detourList.HasILHook = true;
 
-                using var dmd = new DynamicMethodDefinition(SourceClone);
+                using var dmd = new DynamicMethodDefinition(SourceCloneIl);
 
                 var def = dmd.Definition!;
                 var cur = ilhookGraph.ListHead;
