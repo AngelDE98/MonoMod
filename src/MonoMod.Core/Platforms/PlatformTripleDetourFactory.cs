@@ -33,6 +33,7 @@ namespace MonoMod.Core.Platforms
             if (!triple.TryDisableInlining(request.Source))
                 MMDbgLog.Warning($"Could not disable inlining of method {request.Source}; detours may not be reliable");
 
+            // note: any source clones we generate here will be IL copies, but the request is for specifically if it is *not* an IL copy.
             var detour = new Detour(triple, request.Source, request.Target);
             if (request.ApplyByDefault)
             {

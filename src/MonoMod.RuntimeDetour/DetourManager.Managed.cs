@@ -124,9 +124,8 @@ namespace MonoMod.RuntimeDetour
 
         internal sealed class ManagedDetourSyncInfo : DetourSyncInfo
         {
-
             public int HasStolenTrampolines;
-            public readonly ConcurrentQueue<ManagedChainNode> TrampolineStealers = new ConcurrentQueue<ManagedChainNode>();
+            public readonly ConcurrentQueue<ManagedChainNode> TrampolineStealers = new();
 
             public void StealTrampoline(IDetourFactory factory, ManagedChainNode node)
             {
@@ -168,7 +167,7 @@ namespace MonoMod.RuntimeDetour
 
             public readonly MethodSignature Sig;
             public readonly ManagedDetourSyncInfo SyncInfo = new();
-            public readonly ConcurrentQueue<Action> StolenTrampolineReturners = new ConcurrentQueue<Action>();
+            public readonly ConcurrentQueue<Action> StolenTrampolineReturners = new();
             private readonly DataScope<DynamicReferenceCell> syncProxyRefScope;
 
             public bool HasILHook;
@@ -206,15 +205,54 @@ namespace MonoMod.RuntimeDetour
             {
                 base.UpdateDetour(factory, fallback);
 
-                syncDetour ??= factory.CreateDetour(Entry, SyncInfo.SyncProxy!, applyByDefault: false);
+                Helpers.Assert(syncDetour is not null);
 
                 if (!HasILHook && Next is null && syncDetour.IsApplied)
                 {
                     syncDetour.Undo();
+                    syncDetour.Dispose();
+                    syncDetour = null;
                 }
                 else if ((HasILHook || Next is not null) && !syncDetour.IsApplied)
                 {
                     syncDetour.Apply();
+                }
+            }
+
+            private MethodInfo? sourceClone;
+            private DynamicMethodDefinition? sourceCloneIl;
+
+            public void PrepareDetour(IDetourFactory factory, out MethodInfo sourceClone, out DynamicMethodDefinition? sourceCloneIl)
+            {
+                if (syncDetour is null)
+                {
+                    var detour = syncDetour = factory.CreateDetour(new(Entry, SyncInfo.SyncProxy!)
+                    {
+                        ApplyByDefault = false,
+                        CreateSourceCloneIfNotILClone = true,
+                    });
+
+                    if (detour is ICoreDetourWithClone { SourceMethodClone: { } clone } detourWithClone)
+                    {
+                        // if a clone was created here, then it's not an IL-copy, and we have no choice but to throw away the old one.
+                        sourceClone = this.sourceClone = clone;
+
+                        this.sourceCloneIl?.Dispose();
+                        sourceCloneIl = this.sourceCloneIl = detourWithClone.SourceMethodCloneIL;
+                    }
+                    else
+                    {
+                        // need to manually create the source clone
+                        // we only do this if we don't already have one though, because we don't want to re-copy the IL body
+                        sourceCloneIl = this.sourceCloneIl ??= new DynamicMethodDefinition(Entry);
+                        sourceClone = this.sourceClone ??= sourceCloneIl.Generate();
+                    }
+                }
+                else
+                {
+                    Helpers.Assert(this.sourceClone is not null);
+                    sourceClone = this.sourceClone;
+                    sourceCloneIl = this.sourceCloneIl;
                 }
             }
         }
@@ -248,14 +286,13 @@ namespace MonoMod.RuntimeDetour
         internal sealed class ManagedDetourState
         {
             public readonly MethodBase Source;
-            public readonly MethodBase ILCopy;
-            public MethodBase EndOfChain;
+            public MethodInfo? SourceClone;
+            public DynamicMethodDefinition? SourceCloneIl;
+            public MethodInfo? EndOfChain;
 
             public ManagedDetourState(MethodBase src)
             {
                 Source = src;
-                ILCopy = src.CreateILCopy();
-                EndOfChain = ILCopy;
                 detourList = new(src);
             }
 
@@ -299,6 +336,7 @@ namespace MonoMod.RuntimeDetour
                         detour.ManagerData = cnode;
                     }
 
+                    PrepareEndOfChain(detour.Factory);
                     UpdateChain(detour.Factory, out _);
                 }
                 finally
@@ -352,6 +390,7 @@ namespace MonoMod.RuntimeDetour
             private void RemoveGraphDetour(SingleManagedDetourState detour, DepGraphNode<ManagedChainNode> node)
             {
                 detourGraph.Remove(node);
+                PrepareEndOfChain(detour.Factory);
                 UpdateChain(detour.Factory, out var stealTrampoline);
                 if (stealTrampoline)
                 {
@@ -375,6 +414,7 @@ namespace MonoMod.RuntimeDetour
                     chain = ref chain.Next;
                 }
 
+                PrepareEndOfChain(detour.Factory);
                 UpdateChain(detour.Factory, out var stealTrampoline);
                 if (stealTrampoline)
                 {
@@ -417,6 +457,7 @@ namespace MonoMod.RuntimeDetour
 
                     try
                     {
+                        PrepareEndOfChain(ilhook.Factory);
                         UpdateEndOfChain();
                     }
                     catch
@@ -436,6 +477,7 @@ namespace MonoMod.RuntimeDetour
                         UpdateEndOfChain();
                         throw;
                     }
+
                     UpdateChain(ilhook.Factory, out _);
                 }
                 finally
@@ -489,6 +531,7 @@ namespace MonoMod.RuntimeDetour
             private void RemoveGraphILHook(SingleILHookState ilhook, DepGraphNode<ILHookEntry> node)
             {
                 ilhookGraph.Remove(node);
+                PrepareEndOfChain(ilhook.Factory);
                 UpdateEndOfChain();
                 UpdateChain(ilhook.Factory, out _);
                 CleanILContexts();
@@ -498,24 +541,38 @@ namespace MonoMod.RuntimeDetour
             private void RemoveNoConfigILHook(SingleILHookState ilhook, ILHookEntry node)
             {
                 noConfigIlhooks.Remove(node);
+                PrepareEndOfChain(ilhook.Factory);
                 UpdateEndOfChain();
                 UpdateChain(ilhook.Factory, out _);
                 CleanILContexts();
                 node.Remove();
             }
 
+            private void PrepareEndOfChain(IDetourFactory factory)
+            {
+                detourList.PrepareDetour(factory, out SourceClone, out SourceCloneIl);
+                EndOfChain ??= SourceClone;
+            }
+
             private void UpdateEndOfChain()
             {
+                Helpers.Assert(SourceClone is not null);
+
                 if (noConfigIlhooks.Count == 0 && ilhookGraph.ListHead is null)
                 {
                     detourList.HasILHook = false;
-                    EndOfChain = ILCopy;
+                    EndOfChain = SourceClone;
                     return;
+                }
+
+                if (SourceCloneIl is null)
+                {
+                    throw new InvalidOperationException("Target method cannot be ILHooked");
                 }
 
                 detourList.HasILHook = true;
 
-                using var dmd = new DynamicMethodDefinition(Source);
+                using var dmd = new DynamicMethodDefinition(SourceCloneIl);
 
                 var def = dmd.Definition!;
                 var cur = ilhookGraph.ListHead;
@@ -586,6 +643,9 @@ namespace MonoMod.RuntimeDetour
 
             private void UpdateChain(IDetourFactory updatingFactory, out bool stealTrampolines)
             {
+                Helpers.Assert(SourceClone is not null);
+                Helpers.Assert(EndOfChain is not null);
+
                 var graphNode = detourGraph.ListHead;
 
                 ManagedChainNode? chain = null;
@@ -617,6 +677,7 @@ namespace MonoMod.RuntimeDetour
                         fac ??= (chain as ManagedDetourChainNode)?.Factory;
                         // and if that doesn't exist, then the updating factory
                         fac ??= updatingFactory;
+
                         chain.UpdateDetour(fac, EndOfChain);
 
                         chain = chain.Next;
