@@ -12,7 +12,6 @@ namespace MonoMod.RuntimeDetour.HookGen
     /// </summary>
     public static class HookEndpointManager
     {
-
         private const string ObsoleteMessage = "This member should never be used directly from user code. Use Hook or ILHook directly instead.";
         private const string HookAlreadyAppliedMsg = "Delegate has already been applied to this method as a hook!";
 

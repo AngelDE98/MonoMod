@@ -24,6 +24,9 @@ env:
   DOTNET_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
   NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+  # We have to force the Roslyn version to be 4.10, because docfx ships that version, and if we target newer for the DocFX build,
+  # our source generators won't load,
+  RoslynVersion: 4.10.0
 
 jobs:
   publish-docs:

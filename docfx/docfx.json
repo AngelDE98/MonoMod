@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
   "metadata": [
     {
       "src": [
@@ -28,7 +29,11 @@
       "categoryLayout": "nested",
       "namespaceLayout": "flattened",
       "memberLayout": "separatePages",
-      "enumSortOrder": "declaringOrder"
+      "enumSortOrder": "declaringOrder",
+      "noRestore": true,
+      "properties": {
+        "TargetFramework": "net8.0"
+      }
     }
   ],
   "build": {
@@ -76,12 +81,13 @@
       }
     ],
     "dest": "_site",
-    "globalMetadataFiles": ["globalmeta.json"],
+    "globalMetadataFiles": [ "globalmeta.json" ],
     "fileMetadataFiles": [],
     "template": [
-      "default", "modern"
+      "default",
+      "modern"
     ],
-    "postProcessors": ["ExtractSearchIndex"],
+    "postProcessors": [ "ExtractSearchIndex" ],
     "markdownEngineName": "markdig",
     "noLangKeyword": false,
     "keepFileLink": false,

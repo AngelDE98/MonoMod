@@ -10,7 +10,7 @@
 ## Usage
 
 Use `DetourFactory.Current.CreateDetour` to create a single detour from one method to another. The detour will be
-automatically undone when the returnedc object is disposed or garbage collected. Only one such detour may be made per
+automatically undone when the returned object is disposed or garbage collected. Only one such detour may be made per
 method. If multiple are made, they will not be cleaned up properly. `MonoMod.Core` does not track which methods have
 already been detoured, and will not throw.
 
