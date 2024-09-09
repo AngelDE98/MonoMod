@@ -1,4 +1,5 @@
 ﻿using MonoMod.Backports;
+using MonoMod.Utils;
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -7,10 +8,6 @@ using System.Runtime.InteropServices;
 
 namespace MonoMod.Core.Interop
 {
-
-    // IMPORTANT: Instead of manually writing the interop code for Windows, we mostly use Microsoft.Windows.CsWin32 to generate them.
-    // New Win32 methods should be added to NativeMethods.txt and used as Windows.Win32.Interop.*
-
     internal static unsafe class Windows
     {
         // Definitions copied from source.terrafx.dev
@@ -162,9 +159,9 @@ namespace MonoMod.Core.Interop
                 Value = value;
             }
 
-            public static BOOL FALSE => new BOOL(0);
+            public static BOOL FALSE => new(0);
 
-            public static BOOL TRUE => new BOOL(1);
+            public static BOOL TRUE => new(1);
 
             public static bool operator ==(BOOL left, BOOL right) => left.Value == right.Value;
 
@@ -180,51 +177,51 @@ namespace MonoMod.Core.Interop
 
             public static implicit operator bool(BOOL value) => value.Value != 0;
 
-            public static implicit operator BOOL(bool value) => new BOOL(value ? 1 : 0);
+            public static implicit operator BOOL(bool value) => new(value ? 1 : 0);
 
             public static bool operator false(BOOL value) => value.Value == 0;
 
             public static bool operator true(BOOL value) => value.Value != 0;
 
-            public static implicit operator BOOL(byte value) => new BOOL(value);
+            public static implicit operator BOOL(byte value) => new(value);
 
-            public static explicit operator byte(BOOL value) => (byte)(value.Value);
+            public static explicit operator byte(BOOL value) => (byte)value.Value;
 
-            public static implicit operator BOOL(short value) => new BOOL(value);
+            public static implicit operator BOOL(short value) => new(value);
 
-            public static explicit operator short(BOOL value) => (short)(value.Value);
+            public static explicit operator short(BOOL value) => (short)value.Value;
 
-            public static implicit operator BOOL(int value) => new BOOL(value);
+            public static implicit operator BOOL(int value) => new(value);
 
             public static implicit operator int(BOOL value) => value.Value;
 
-            public static explicit operator BOOL(long value) => new BOOL(unchecked((int)(value)));
+            public static explicit operator BOOL(long value) => new(unchecked((int)value));
 
             public static implicit operator long(BOOL value) => value.Value;
 
-            public static explicit operator BOOL(nint value) => new BOOL(unchecked((int)(value)));
+            public static explicit operator BOOL(nint value) => new(unchecked((int)value));
 
             public static implicit operator nint(BOOL value) => value.Value;
 
-            public static implicit operator BOOL(sbyte value) => new BOOL(value);
+            public static implicit operator BOOL(sbyte value) => new(value);
 
-            public static explicit operator sbyte(BOOL value) => (sbyte)(value.Value);
+            public static explicit operator sbyte(BOOL value) => (sbyte)value.Value;
 
-            public static implicit operator BOOL(ushort value) => new BOOL(value);
+            public static implicit operator BOOL(ushort value) => new(value);
 
-            public static explicit operator ushort(BOOL value) => (ushort)(value.Value);
+            public static explicit operator ushort(BOOL value) => (ushort)value.Value;
 
-            public static explicit operator BOOL(uint value) => new BOOL(unchecked((int)(value)));
+            public static explicit operator BOOL(uint value) => new(unchecked((int)value));
 
-            public static explicit operator uint(BOOL value) => (uint)(value.Value);
+            public static explicit operator uint(BOOL value) => (uint)value.Value;
 
-            public static explicit operator BOOL(ulong value) => new BOOL(unchecked((int)(value)));
+            public static explicit operator BOOL(ulong value) => new(unchecked((int)value));
 
-            public static explicit operator ulong(BOOL value) => (ulong)(value.Value);
+            public static explicit operator ulong(BOOL value) => (ulong)value.Value;
 
-            public static explicit operator BOOL(nuint value) => new BOOL(unchecked((int)(value)));
+            public static explicit operator BOOL(nuint value) => new(unchecked((int)value));
 
-            public static explicit operator nuint(BOOL value) => (nuint)(value.Value);
+            public static explicit operator nuint(BOOL value) => (nuint)value.Value;
 
             public int CompareTo(object? obj)
             {
@@ -258,9 +255,9 @@ namespace MonoMod.Core.Interop
                 Value = value;
             }
 
-            public static HANDLE INVALID_VALUE => new HANDLE((void*)(-1));
+            public static HANDLE INVALID_VALUE => new((void*)-1);
 
-            public static HANDLE NULL => new HANDLE(null);
+            public static HANDLE NULL => new(null);
 
             public static bool operator ==(HANDLE left, HANDLE right) => left.Value == right.Value;
 
@@ -274,49 +271,49 @@ namespace MonoMod.Core.Interop
 
             public static bool operator >=(HANDLE left, HANDLE right) => left.Value >= right.Value;
 
-            public static explicit operator HANDLE(void* value) => new HANDLE(value);
+            public static explicit operator HANDLE(void* value) => new(value);
 
             public static implicit operator void*(HANDLE value) => value.Value;
 
-            public static explicit operator HANDLE(byte value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(byte value) => new(unchecked((void*)value));
 
-            public static explicit operator byte(HANDLE value) => (byte)(value.Value);
+            public static explicit operator byte(HANDLE value) => (byte)value.Value;
 
-            public static explicit operator HANDLE(short value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(short value) => new(unchecked((void*)value));
 
-            public static explicit operator short(HANDLE value) => (short)(value.Value);
+            public static explicit operator short(HANDLE value) => (short)value.Value;
 
-            public static explicit operator HANDLE(int value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(int value) => new(unchecked((void*)value));
 
-            public static explicit operator int(HANDLE value) => (int)(value.Value);
+            public static explicit operator int(HANDLE value) => (int)value.Value;
 
-            public static explicit operator HANDLE(long value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(long value) => new(unchecked((void*)value));
 
-            public static explicit operator long(HANDLE value) => (long)(value.Value);
+            public static explicit operator long(HANDLE value) => (long)value.Value;
 
-            public static explicit operator HANDLE(nint value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(nint value) => new(unchecked((void*)value));
 
-            public static implicit operator nint(HANDLE value) => (nint)(value.Value);
+            public static implicit operator nint(HANDLE value) => (nint)value.Value;
 
-            public static explicit operator HANDLE(sbyte value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(sbyte value) => new(unchecked((void*)value));
 
-            public static explicit operator sbyte(HANDLE value) => (sbyte)(value.Value);
+            public static explicit operator sbyte(HANDLE value) => (sbyte)value.Value;
 
-            public static explicit operator HANDLE(ushort value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(ushort value) => new(unchecked((void*)value));
 
-            public static explicit operator ushort(HANDLE value) => (ushort)(value.Value);
+            public static explicit operator ushort(HANDLE value) => (ushort)value.Value;
 
-            public static explicit operator HANDLE(uint value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(uint value) => new(unchecked((void*)value));
 
-            public static explicit operator uint(HANDLE value) => (uint)(value.Value);
+            public static explicit operator uint(HANDLE value) => (uint)value.Value;
 
-            public static explicit operator HANDLE(ulong value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(ulong value) => new(unchecked((void*)value));
 
-            public static explicit operator ulong(HANDLE value) => (ulong)(value.Value);
+            public static explicit operator ulong(HANDLE value) => (ulong)value.Value;
 
-            public static explicit operator HANDLE(nuint value) => new HANDLE(unchecked((void*)(value)));
+            public static explicit operator HANDLE(nuint value) => new(unchecked((void*)value));
 
-            public static implicit operator nuint(HANDLE value) => (nuint)(value.Value);
+            public static implicit operator nuint(HANDLE value) => (nuint)value.Value;
 
             public int CompareTo(object? obj)
             {
@@ -330,24 +327,24 @@ namespace MonoMod.Core.Interop
 
             public int CompareTo(HANDLE other)
                 => sizeof(nint) == 4
-                    ? ((uint)(Value)).CompareTo((uint)(other.Value))
-                    : ((ulong)(Value)).CompareTo((ulong)(other.Value));
+                    ? ((uint)Value).CompareTo((uint)other.Value)
+                    : ((ulong)Value).CompareTo((ulong)other.Value);
 
             public override bool Equals(object? obj) => (obj is HANDLE other) && Equals(other);
 
-            public bool Equals(HANDLE other) => ((nuint)(Value)).Equals((nuint)(other.Value));
+            public bool Equals(HANDLE other) => ((nuint)Value).Equals((nuint)other.Value);
 
-            public override int GetHashCode() => ((nuint)(Value)).GetHashCode();
+            public override int GetHashCode() => ((nuint)Value).GetHashCode();
 
             public override string ToString()
                 => sizeof(nuint) == 4
-                    ? ((uint)(Value)).ToString("X8", null)
-                    : ((ulong)(Value)).ToString("X16", null);
+                    ? ((uint)Value).ToString("X8", null)
+                    : ((ulong)Value).ToString("X16", null);
 
             public string ToString(string? format, IFormatProvider? formatProvider)
                 => sizeof(nint) == 4
-                    ? ((uint)(Value)).ToString(format, formatProvider)
-                    : ((ulong)(Value)).ToString(format, formatProvider);
+                    ? ((uint)Value).ToString(format, formatProvider)
+                    : ((ulong)Value).ToString(format, formatProvider);
         }
 
         [NativeTypeName("#define MEM_COMMIT 0x00001000")]
@@ -390,7 +387,7 @@ namespace MonoMod.Core.Interop
         public const uint MEM_4MB_PAGES = 0x80000000;
 
         [NativeTypeName("#define MEM_64K_PAGES (MEM_LARGE_PAGES | MEM_PHYSICAL)")]
-        public const int MEM_64K_PAGES = (0x20000000 | 0x00400000);
+        public const int MEM_64K_PAGES = 0x20000000 | 0x00400000;
 
         [NativeTypeName("#define MEM_UNMAP_WITH_TRANSIENT_BOOST 0x00000001")]
         public const int MEM_UNMAP_WITH_TRANSIENT_BOOST = 0x00000001;
@@ -435,13 +432,13 @@ namespace MonoMod.Core.Interop
         public const int MEM_EXTENDED_PARAMETER_IMAGE_NO_HPAT = 0x00000080;
 
         [NativeTypeName("#define MEM_EXTENDED_PARAMETER_NUMA_NODE_MANDATORY MINLONG64")]
-        public const long MEM_EXTENDED_PARAMETER_NUMA_NODE_MANDATORY = unchecked((long)(~((long)(((ulong)(~((ulong)(0)))) >> 1))));
+        public const long MEM_EXTENDED_PARAMETER_NUMA_NODE_MANDATORY = unchecked((long)~(long)(((ulong)~(ulong)0) >> 1));
 
         [NativeTypeName("#define MEM_EXTENDED_PARAMETER_TYPE_BITS 8")]
         public const int MEM_EXTENDED_PARAMETER_TYPE_BITS = 8;
 
         [NativeTypeName("#define MEM_DEDICATED_ATTRIBUTE_NOT_SPECIFIED ((DWORD64) -1)")]
-        public const ulong MEM_DEDICATED_ATTRIBUTE_NOT_SPECIFIED = unchecked((ulong)(-1));
+        public const ulong MEM_DEDICATED_ATTRIBUTE_NOT_SPECIFIED = unchecked((ulong)-1);
 
         [NativeTypeName("#define MEM_PRIVATE 0x00020000")]
         public const int MEM_PRIVATE = 0x00020000;
@@ -528,13 +525,13 @@ namespace MonoMod.Core.Interop
         public const int PAGE_ENCLAVE_MASK = 0x10000000;
 
         [NativeTypeName("#define PAGE_ENCLAVE_DECOMMIT (PAGE_ENCLAVE_MASK | 0)")]
-        public const int PAGE_ENCLAVE_DECOMMIT = (0x10000000 | 0);
+        public const int PAGE_ENCLAVE_DECOMMIT = 0x10000000 | 0;
 
         [NativeTypeName("#define PAGE_ENCLAVE_SS_FIRST (PAGE_ENCLAVE_MASK | 1)")]
-        public const int PAGE_ENCLAVE_SS_FIRST = (0x10000000 | 1);
+        public const int PAGE_ENCLAVE_SS_FIRST = 0x10000000 | 1;
 
         [NativeTypeName("#define PAGE_ENCLAVE_SS_REST (PAGE_ENCLAVE_MASK | 2)")]
-        public const int PAGE_ENCLAVE_SS_REST = (0x10000000 | 2);
+        public const int PAGE_ENCLAVE_SS_REST = 0x10000000 | 2;
 
         [NativeTypeName("#define PROCESSOR_ARCHITECTURE_INTEL 0")]
         public const int PROCESSOR_ARCHITECTURE_INTEL = 0;
@@ -584,6 +581,78 @@ namespace MonoMod.Core.Interop
         [NativeTypeName("#define PROCESSOR_ARCHITECTURE_UNKNOWN 0xFFFF")]
         public const int PROCESSOR_ARCHITECTURE_UNKNOWN = 0xFFFF;
 
-    }
 
+
+        [NativeTypeName("#define CFG_CALL_TARGET_VALID (0x00000001)")]
+        public const int CFG_CALL_TARGET_VALID = 0x00000001;
+
+        [NativeTypeName("#define CFG_CALL_TARGET_PROCESSED (0x00000002)")]
+        public const int CFG_CALL_TARGET_PROCESSED = 0x00000002;
+
+        [NativeTypeName("#define CFG_CALL_TARGET_CONVERT_EXPORT_SUPPRESSED_TO_VALID (0x00000004)")]
+        public const int CFG_CALL_TARGET_CONVERT_EXPORT_SUPPRESSED_TO_VALID = 0x00000004;
+
+        [NativeTypeName("#define CFG_CALL_TARGET_VALID_XFG (0x00000008)")]
+        public const int CFG_CALL_TARGET_VALID_XFG = 0x00000008;
+
+        [NativeTypeName("#define CFG_CALL_TARGET_CONVERT_XFG_TO_CFG (0x00000010)")]
+        public const int CFG_CALL_TARGET_CONVERT_XFG_TO_CFG = 0x00000010;
+
+        public partial struct CFG_CALL_TARGET_INFO
+        {
+            [NativeTypeName("ULONG_PTR")]
+            public nuint Offset;
+
+            [NativeTypeName("ULONG_PTR")]
+            public nuint Flags;
+        }
+
+        // NOTE: This is only supported on Windows 10+! Our safe-wrapper returns FALSE when this function doesn't exist.
+        [DllImport("kernelbase", ExactSpelling = true)]
+        [SetsLastSystemError]
+        private static extern BOOL SetProcessValidCallTargets(HANDLE hProcess,
+            [NativeTypeName("PVOID")] void* VirtualAddress,
+            [NativeTypeName("SIZE_T")] nuint RegionSize,
+            [NativeTypeName("ULONG")] uint NumberOfOffsets,
+            [NativeTypeName("PCFG_CALL_TARGET_INFO")] CFG_CALL_TARGET_INFO* OffsetInformation);
+
+        private static bool? hasSetProcessValidCallTargets;
+        public static bool HasSetProcessValidCallTargets
+        {
+            get
+            {
+                return hasSetProcessValidCallTargets ??= DoGet();
+
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                static bool DoGet()
+                {
+                    var kbase = DynDll.OpenLibrary("kernelbase");
+                    try
+                    {
+                        return DynDll.TryGetExport(kbase, nameof(SetProcessValidCallTargets), out _);
+                    }
+                    finally
+                    {
+                        DynDll.CloseLibrary(kbase);
+                    }
+                }
+            }
+        }
+
+        public static BOOL TrySetProcessValidCallTargets(
+            void* VirtualAddress,
+            nuint RegionSize,
+            uint NumberOfOffsets,
+            CFG_CALL_TARGET_INFO* OffsetInformation)
+        {
+            if (HasSetProcessValidCallTargets)
+            {
+                return SetProcessValidCallTargets(GetCurrentProcess(), VirtualAddress, RegionSize, NumberOfOffsets, OffsetInformation);
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
 }
