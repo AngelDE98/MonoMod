@@ -24,9 +24,6 @@ env:
   DOTNET_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
   NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
-  # We have to force the Roslyn version to be 4.10, because docfx ships that version, and if we target newer for the DocFX build,
-  # our source generators won't load,
-  RoslynVersion: 4.10.0
 
 jobs:
   publish-docs:
@@ -57,15 +54,18 @@ jobs:
         path: ${{ env.NUGET_PACKAGES }}
         key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
         restore-keys: ${{ runner.os }}-nuget-v1-
+        
+    # We have to force the Roslyn version to be 4.10, because docfx ships that version, and if we target newer for the DocFX build,
+    # our source generators won't load,
 
     - name: Restore
-      run: dotnet restore -bl:restore.binlog -noAutoRsp
+      run: dotnet restore -bl:restore.binlog -noAutoRsp -p:RoslynVersion=4.10.0
 
     - name: Restore .NET tools
       run: dotnet tool restore
 
-    - name: Build all projects
-      run: dotnet build -c Release -noAutoRsp -bl:build.binlog -p:RunAnalyzers=false # don't run any analyzers to speed up this build
+    - name: Build all projects # don't run any analyzers to speed up this build
+      run: dotnet build -c Release -noAutoRsp -bl:build.binlog -p:RunAnalyzers=false -p:RoslynVersion=4.10.0
 
     - name: Build DocFX project
       run: dotnet docfx docfx/docfx.json
