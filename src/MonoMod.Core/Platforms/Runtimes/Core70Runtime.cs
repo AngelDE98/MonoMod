@@ -20,7 +20,7 @@ namespace MonoMod.Core.Platforms.Runtimes
 
         // src/coreclr/inc/jiteeversionguid.h line 46
         // 6be47e5d-a92b-4d16-9280-f63df646ada4
-        private static readonly Guid JitVersionGuid = new Guid(
+        private static readonly Guid JitVersionGuid = new(
             0x6be47e5d,
             0xa92b,
             0x4d16,
@@ -56,7 +56,7 @@ namespace MonoMod.Core.Platforms.Runtimes
             {
                 get
                 {
-                    Helpers.DAssert(index < (DataQWords * sizeof(ulong)) / IntPtr.Size);
+                    Helpers.DAssert(index < DataQWords * sizeof(ulong) / IntPtr.Size);
                     return ref Unsafe.Add(ref Unsafe.As<ulong, IntPtr>(ref data[0]), index);
                 }
             }

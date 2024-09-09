@@ -83,7 +83,7 @@ foreach (var os in OS.OperatingSystems)
             }
 
             // if this OS specifies a .NET Mono package, add a job for it
-            if (dotnet is { MonoPackageSource: not null, MonoPackageVersion: not null })
+            if (dotnet is { MonoPackageSource: not null, MonoPackageVersion: not null } && false) // TODO: We currently have a lot of problems on .NET Mono, they need to be fixed
             {
                 var fillDict = new Dictionary<string, string>()
                 {

@@ -103,6 +103,9 @@ namespace MonoMod.Core.Platforms
         /// <summary>
         /// Gets the <see cref="ISystem"/> for this <see cref="PlatformTriple"/>.
         /// </summary>
+        /// <remarks>
+        /// The <see cref="System"/> object may also implement <see cref="IControlFlowGuard"/>, if its operating system has such a feature.
+        /// </remarks>
         public ISystem System { get; }
         /// <summary>
         /// Gets the <see cref="IRuntime"/> for this <see cref="PlatformTriple"/>.

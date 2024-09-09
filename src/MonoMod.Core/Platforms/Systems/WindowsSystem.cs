@@ -1,6 +1,7 @@
 ﻿using MonoMod.Core.Platforms.Memory;
 using MonoMod.Utils;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -11,7 +12,7 @@ using static MonoMod.Core.Interop.Windows;
 
 namespace MonoMod.Core.Platforms.Systems
 {
-    internal sealed class WindowsSystem : ISystem
+    internal sealed class WindowsSystem : ISystem, IControlFlowGuard
     {
         public OSKind Target => OSKind.Windows;
 
@@ -267,7 +268,7 @@ namespace MonoMod.Core.Platforms.Systems
                     allocBase = isFree ? (nint)buffer.BaseAddress : (nint)buffer.AllocationBase;
 
                     // RegionSize is relative to the provided pageAddr for some reason
-                    allocSize = (pageAddr + (nint)buffer.RegionSize) - allocBase;
+                    allocSize = pageAddr + (nint)buffer.RegionSize - allocBase;
 
                     return true;
                 }
@@ -280,6 +281,37 @@ namespace MonoMod.Core.Platforms.Systems
                     return false;
                 }
             }
+        }
+
+        // CFG is considered supported if we have SetProcessValidCallTargets
+        bool IControlFlowGuard.IsSupported => HasSetProcessValidCallTargets;
+
+        // the CFG alignment requirement is 16
+        int IControlFlowGuard.TargetAlignmentRequirement => 16;
+
+        unsafe void IControlFlowGuard.RegisterValidIndirectCallTargets(void* memoryRegionStart, nint memoryRegionLength, ReadOnlySpan<nint> validTargetsInMemoryRegion)
+        {
+            var callTargetInfos = ArrayPool<CFG_CALL_TARGET_INFO>.Shared.Rent(validTargetsInMemoryRegion.Length);
+
+            // populate the CFG_CALL_TARGET_INFO structs
+            for (var i = 0; i < validTargetsInMemoryRegion.Length; i++)
+            {
+                var offset = validTargetsInMemoryRegion[i];
+                callTargetInfos[i] = new()
+                {
+                    Offset = (nuint)offset,
+                    Flags = CFG_CALL_TARGET_VALID | CFG_CALL_TARGET_VALID_XFG
+                };
+            }
+
+            // and call into the OS
+            // note that we don't actually care if it fails; that just means that CFG isn't enabled in this process, which is fine
+            fixed (CFG_CALL_TARGET_INFO* pCallTargets = callTargetInfos)
+            {
+                _ = TrySetProcessValidCallTargets(memoryRegionStart, (nuint)memoryRegionLength, (uint)validTargetsInMemoryRegion.Length, pCallTargets);
+            }
+
+            ArrayPool<CFG_CALL_TARGET_INFO>.Shared.Return(callTargetInfos);
         }
     }
 }

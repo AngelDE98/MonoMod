@@ -448,10 +448,10 @@ namespace MonoMod.Core.Platforms.Architectures
 
         private const int SpecEntryStubArgOffs = 2;
         private const int SpecEntryStubTargetOffs = 0xC;
-        private static ReadOnlySpan<byte> SpecEntryStub => new byte[] {
+        private static ReadOnlySpan<byte> SpecEntryStub => [
             0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x49, 0xBA, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x41, 0xFF, 0xE2
-        };
+        ];
 
         public IAllocatedMemory CreateSpecialEntryStub(IntPtr target, IntPtr argument)
         {
@@ -459,9 +459,8 @@ namespace MonoMod.Core.Platforms.Architectures
             SpecEntryStub.CopyTo(stub);
             Unsafe.WriteUnaligned(ref stub[SpecEntryStubTargetOffs], target);
             Unsafe.WriteUnaligned(ref stub[SpecEntryStubArgOffs], argument);
-            Helpers.Assert(system.MemoryAllocator.TryAllocate(new(stub.Length) { Executable = true, Alignment = 1 }, out var alloc));
-            system.PatchData(PatchTargetKind.Executable, alloc.BaseAddress, stub, default);
-            return alloc;
+
+            return Shared.CreateSingleExecutableStub(system, stub);
         }
     }
 }

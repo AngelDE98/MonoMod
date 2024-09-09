@@ -43,6 +43,9 @@ namespace MonoMod.Core.Platforms.Runtimes
                 case 8:
                     // .NET 8.0.x
                     return new Core80Runtime(system, arch);
+                case 9:
+                    // .NET 9.0.x
+                    return new Core90Runtime(system, arch);
 
                 // currently, we need to manually add support for new versions.
                 // TODO: possibly fall back to a JIT GUID check if we can?

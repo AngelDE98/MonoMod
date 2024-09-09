@@ -12,7 +12,7 @@ namespace MonoMod.Core.Interop
         [SuppressMessage("Performance", "CA1852", Justification = "This type will be derived for .NET 8.")]
         public class V80 : V70
         {
-            public static class ICorJitInfoVtableV80
+            public new static class ICorJitInfoVtable
             {
 
                 // src/coreclr/inc/corinfo.h
