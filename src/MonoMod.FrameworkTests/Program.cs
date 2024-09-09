@@ -10,6 +10,10 @@ using System.Runtime.InteropServices;
 using Xunit.Abstractions;
 #endif
 
+#if NET9_0
+AppContext.SetSwitch("MonoMod.LogInMemory", true);
+#endif
+
 Console.WriteLine("Attach debugger now, then press enter to break");
 Console.ReadLine();
 if (Debugger.IsAttached)
