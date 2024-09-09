@@ -101,6 +101,17 @@ internal sealed record Dotnet : Enableable
             MonoPackageVersion = "8.0.6",
 
             RIDs = ["win-x86", "win-x64", "win-arm64", "linux-x64", "linux-arm", "linux-arm64", "osx-x64", "osx-arm64"]
+        },
+        new()
+        {
+            Name = ".NET 9.0 preview",
+            Sdk = "9.0",
+            TFM = "net9.0",
+            HasPGO = true,
+            MonoPackageSource = Constants.NuGetSource.NugetOrg,
+            MonoPackageVersion = "9.0.0-preview.7.24405.7 ",
+
+            RIDs = ["win-x86", "win-x64", "win-arm64", "linux-x64", "linux-arm", "linux-arm64", "osx-x64", "osx-arm64"]
         }
     ];
 }
