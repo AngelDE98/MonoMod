@@ -74,6 +74,36 @@
     <Right>lib/net452/MonoMod.Backports.dll</Right>
   </Suppression>
   <Suppression>
+    <DiagnosticId>CP0021</DiagnosticId>
+    <Target>T:System.Collections.Concurrent.ConcurrentDictionary`2``0:notnull</Target>
+    <Left>lib/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net452/MonoMod.Backports.dll</Right>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0021</DiagnosticId>
+    <Target>T:System.Tuple`8``7:notnull</Target>
+    <Left>lib/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net452/MonoMod.Backports.dll</Right>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0021</DiagnosticId>
+    <Target>T:System.ValueTuple`8``7:!:System.ValueType</Target>
+    <Left>lib/net35/MonoMod.Backports.dll</Left>
+    <Right>lib/net452/MonoMod.Backports.dll</Right>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0021</DiagnosticId>
+    <Target>T:System.Collections.Concurrent.ConcurrentDictionary`2``0:notnull</Target>
+    <Left>lib/netcoreapp2.1/MonoMod.Backports.dll</Left>
+    <Right>lib/netcoreapp3.0/MonoMod.Backports.dll</Right>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0021</DiagnosticId>
+    <Target>T:System.Tuple`8``7:notnull</Target>
+    <Left>lib/netcoreapp2.1/MonoMod.Backports.dll</Left>
+    <Right>lib/netcoreapp3.0/MonoMod.Backports.dll</Right>
+  </Suppression>
+  <Suppression>
     <DiagnosticId>CP1002</DiagnosticId>
     <Target>mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e, Retargetable=Yes</Target>
     <Left>lib/net452/MonoMod.Backports.dll</Left>
