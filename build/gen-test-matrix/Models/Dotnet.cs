@@ -109,7 +109,7 @@ internal sealed record Dotnet : Enableable
             TFM = "net9.0",
             HasPGO = true,
             MonoPackageSource = Constants.NuGetSource.NugetOrg,
-            MonoPackageVersion = "9.0.0-preview.7.24405.7 ",
+            MonoPackageVersion = "9.0.0-rc.1.24431.7",
 
             RIDs = ["win-x86", "win-x64", "win-arm64", "linux-x64", "linux-arm", "linux-arm64", "osx-x64", "osx-arm64"]
         }
