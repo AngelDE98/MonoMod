@@ -66,7 +66,11 @@ foreach (var decl in tu.TranslationUnitDecl.Decls)
                 methodStr += param.Type.ToString();
             }
 
-            await StdOut.WriteLineAsync(value: $"// {vtblIdx++:X2}: {methodStr})");
+            await StdOut.WriteLineAsync($"// {vtblIdx++:X2}: {methodStr})");
+            if (method.Name is "allocMem")
+            {
+                await StdOut.WriteLineAsync($"public const int AllocMemIndex = 0x{vtblIdx - 1:X};");
+            }
         }
     }
 
