@@ -104,12 +104,12 @@ internal sealed record Dotnet : Enableable
         },
         new()
         {
-            Name = ".NET 9.0 preview",
+            Name = ".NET 9.0",
             Sdk = "9.0",
             TFM = "net9.0",
             HasPGO = true,
             MonoPackageSource = Constants.NuGetSource.NugetOrg,
-            MonoPackageVersion = "9.0.0-rc.1.24431.7",
+            MonoPackageVersion = "9.0.0",
 
             RIDs = ["win-x86", "win-x64", "win-arm64", "linux-x64", "linux-arm", "linux-arm64", "osx-x64", "osx-arm64"]
         }
