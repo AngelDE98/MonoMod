@@ -13,7 +13,7 @@
 
     <MMIncludeTFMChecks>true</MMIncludeTFMChecks>
 
-    <VersionPrefix>25.2.0</VersionPrefix>
+    <VersionPrefix>25.2.1</VersionPrefix>
     <PackageValidationBaselineVersion>25.0.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 
