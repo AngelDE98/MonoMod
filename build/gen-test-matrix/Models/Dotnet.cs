@@ -104,7 +104,7 @@ internal sealed record Dotnet : Enableable
         },
         new()
         {
-            Name = ".NET 9.0 preview",
+            Name = ".NET 9.0",
             Sdk = "9.0",
             TFM = "net9.0",
             HasPGO = true,
