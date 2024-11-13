@@ -38,7 +38,7 @@ jobs:
       uses: nike4613/install-dotnet@54b402247e474b39b84891b9093d8025892c8b47
       with:
         architecture: ${{ fromJSON(inputs.matrix).arch }}
-        version: "8.0"
+        version: "9.0"
         
     - name: Cache restored NuGet packages
       uses: actions/cache@v4
