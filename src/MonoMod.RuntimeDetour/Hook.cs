@@ -588,6 +588,8 @@ namespace MonoMod.RuntimeDetour
 
         private MethodInfo PrepareRealTarget(object? target, out TrampolineData trampoline, out DataScope<DynamicReferenceCell> scope)
         {
+            CheckSupported();
+
             var srcSig = MethodSignature.ForMethod(Source);
             var dstSig = MethodSignature.ForMethod(Target, ignoreThis: true); // the dest sig we don't want to consider its this param
 
@@ -700,6 +702,12 @@ namespace MonoMod.RuntimeDetour
 
                 return dmd.Generate();
             }
+        }
+
+        private void CheckSupported()
+        {
+            if (Source.IsGenericMethod || Source.DeclaringType is { IsGenericType: true })
+                throw new ArgumentException("Source method is generic, generic hooks are not supported");
         }
 
         private void CheckDisposed()
