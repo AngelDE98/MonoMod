@@ -1,4 +1,4 @@
-﻿using MonoMod.Backports;
+using MonoMod.Backports;
 using MonoMod.Utils;
 using System;
 using System.Collections.Concurrent;
@@ -226,6 +226,12 @@ namespace MonoMod.Core.Platforms.Runtimes
             }
 
             return method.MethodHandle;
+        }
+
+        public bool RequiresGenericContext(MethodBase method)
+        {
+            // Mono never provides generic context through a hidden argument.
+            return false;
         }
 
         private sealed class PrivateMethodPin
