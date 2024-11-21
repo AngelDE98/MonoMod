@@ -56,6 +56,16 @@ namespace MonoMod.Core.Platforms
         RuntimeMethodHandle GetMethodHandle(MethodBase method);
 
         /// <summary>
+        /// Determines whether a particular method requires a generic context to be provided to it by the runtime.
+        /// </summary>
+        /// <param name="method">The method to check.</param>
+        /// <returns>
+        /// <c>true</c> if the method requires a generic context to be provided to it by the runtime;
+        /// otherwise, <c>false</c>.
+        /// </returns>
+        bool RequiresGenericContext(MethodBase method);
+
+        /// <summary>
         /// Disables inlining for a particular method. After this is called, future invocations of this method will not be inlined at the callsite by the runtime.
         /// </summary>
         /// <remarks>
