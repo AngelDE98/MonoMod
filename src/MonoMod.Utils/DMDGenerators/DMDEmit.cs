@@ -181,20 +181,21 @@ namespace MonoMod.Utils
                     il.Emit(_ReflOpCodes[instr.OpCode.Value]);
                 else
                 {
+                    var opcode = instr.OpCode;
                     var operand = instr.Operand;
 
                     if (operand is Instruction[] targets)
                     {
                         operand = targets.Select(target => labelMap[target]).ToArray();
                         // Let's hope that the JIT treats the long forms identically to the short forms.
-                        instr.OpCode = instr.OpCode.ToLongOp();
+                        opcode = opcode.ToLongOp();
 
                     }
                     else if (operand is Instruction target)
                     {
                         operand = labelMap[target];
                         // Let's hope that the JIT treats the long forms identically to the short forms.
-                        instr.OpCode = instr.OpCode.ToLongOp();
+                        opcode = opcode.ToLongOp();
 
                     }
                     else if (operand is VariableDefinition var)
@@ -235,7 +236,7 @@ namespace MonoMod.Utils
                         if (dm != null)
                         {
                             // SignatureHelper in unmanaged contexts cannot be fully made use of for DynamicMethods.
-                            _EmitCallSite(dm, il, _ReflOpCodes[instr.OpCode.Value], csite);
+                            _EmitCallSite(dm, il, _ReflOpCodes[opcode.Value], csite);
                             continue;
                         }
 #if NETFRAMEWORK
@@ -251,7 +252,7 @@ namespace MonoMod.Utils
 #if NETFRAMEWORK
                     if (mb != null && operand is MethodBase called && called.DeclaringType == null) {
                         // "Global" methods (f.e. DynamicMethods) cannot be tokenized.
-                        if (instr.OpCode == Mono.Cecil.Cil.OpCodes.Call) {
+                        if (opcode == Mono.Cecil.Cil.OpCodes.Call) {
                             if (called is MethodInfo target && target.IsDynamicMethod()) {
                                 // This should be heavily optimizable.
                                 operand = _CreateMethodProxy(mb, target);
@@ -263,11 +264,11 @@ namespace MonoMod.Utils
                                 else
                                     il.Emit(System.Reflection.Emit.OpCodes.Ldc_I8, (long) ptr);
                                 il.Emit(System.Reflection.Emit.OpCodes.Conv_I);
-                                instr.OpCode = Mono.Cecil.Cil.OpCodes.Calli;
+                                opcode = Mono.Cecil.Cil.OpCodes.Calli;
                                 operand = ((MethodReference) instr.Operand).ResolveReflectionSignature(mb.Module);
                             }
                         } else {
-                            throw new NotSupportedException($"Unsupported global method operand on opcode {instr.OpCode.Name}");
+                            throw new NotSupportedException($"Unsupported global method operand on opcode {opcode.Name}");
                         }
                     }
 #endif
@@ -275,7 +276,7 @@ namespace MonoMod.Utils
                     if (operand == null)
                         throw new InvalidOperationException($"Unexpected null in {def} @ {instr}");
 
-                    il.DynEmit(_ReflOpCodes[instr.OpCode.Value], operand);
+                    il.DynEmit(_ReflOpCodes[opcode.Value], operand);
                 }
 
                 if (!checkTryEndEarly)

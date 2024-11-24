@@ -1,4 +1,6 @@
 ﻿extern alias New;
+
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.Core.Platforms;
 using MonoMod.Utils;
@@ -246,6 +248,22 @@ namespace MonoMod.UnitTest
         private static int TargetTest<TA, TB>()
         {
             return 2;
+        }
+
+        [Fact]
+        public void DMDGenerateDoesNotModifyDMD()
+        {
+            using var origDmd = new DynamicMethodDefinition("Test DMD", null, []);
+            var il = origDmd.GetILProcessor();
+            var targetIns = Instruction.Create(OpCodes.Ret);
+            il.Emit(OpCodes.Br_S, targetIns);
+            il.Append(targetIns);
+
+            using var genClone = new DynamicMethodDefinition(origDmd);
+            _ = genClone.Generate();
+
+            Assert.Equal(genClone.Definition.Body.Instructions[1], genClone.Definition.Body.Instructions[0].Operand);
+            Assert.Equal(OpCodes.Br_S, genClone.Definition.Body.Instructions[0].OpCode);
         }
 
     }
