@@ -19,18 +19,22 @@ namespace MonoMod.Utils.Cil
     /// </summary>
     public sealed class CecilILGenerator : ILGeneratorShim
     {
+        // https://github.com/dotnet/runtime/blob/f1332ab0d82ee0e21ca387cbd1c8a87c5dfa4906/src/coreclr/System.Private.CoreLib/src/System/Reflection/Emit/RuntimeLocalBuilder.cs
+        // In .NET 9 LocalBuilder is opaque type so look for RuntimeLocalBuilder first
+        private static readonly Type t_LocalBuilder = Type.GetType("System.Reflection.Emit.RuntimeLocalBuilder") ?? typeof(LocalBuilder);
+        
         // https://github.com/Unity-Technologies/mono/blob/unity-5.6/mcs/class/corlib/System.Reflection.Emit/LocalBuilder.cs
         // https://github.com/Unity-Technologies/mono/blob/unity-2018.3-mbe/mcs/class/corlib/System.Reflection.Emit/LocalBuilder.cs
         // https://github.com/dotnet/coreclr/blob/master/src/System.Private.CoreLib/src/System/Reflection/Emit/LocalBuilder.cs
         // Mono: Type, ILGenerator
         // .NET Framework matches .NET Core: int, Type, MethodInfo(, bool)
         private static readonly ConstructorInfo c_LocalBuilder =
-            typeof(LocalBuilder).GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
+            t_LocalBuilder.GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
             .OrderByDescending(c => c.GetParameters().Length).First();
         private static readonly FieldInfo? f_LocalBuilder_position =
-            typeof(LocalBuilder).GetField("position", BindingFlags.NonPublic | BindingFlags.Instance);
+            t_LocalBuilder.GetField("position", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly FieldInfo? f_LocalBuilder_is_pinned =
-            typeof(LocalBuilder).GetField("is_pinned", BindingFlags.NonPublic | BindingFlags.Instance);
+            t_LocalBuilder.GetField("is_pinned", BindingFlags.NonPublic | BindingFlags.Instance);
 
         private static int c_LocalBuilder_params = c_LocalBuilder.GetParameters().Length;
 
