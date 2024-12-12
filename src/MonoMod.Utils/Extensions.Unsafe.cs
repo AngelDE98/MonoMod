@@ -26,7 +26,9 @@ namespace MonoMod.Utils
         /// <param name="t">The type to get the size from.</param>
         /// <returns>The managed type size.</returns>
         public static int GetManagedSize(this Type t)
-            => _GetManagedSizeCache.GetOrAdd(Helpers.ThrowIfNull(t), ComputeManagedSize);
+            => Helpers.ThrowIfNull(t).IsByRef || t.IsPointer
+                ? IntPtr.Size
+                : _GetManagedSizeCache.GetOrAdd(Helpers.ThrowIfNull(t), ComputeManagedSize);
 
         private static int ComputeManagedSize(Type t)
         {
@@ -36,7 +38,22 @@ namespace MonoMod.Utils
                 _GetManagedSizeHelper = szHelper = typeof(Unsafe).GetMethod(nameof(Unsafe.SizeOf))!;
             }
 
+            if (t.IsByRef || t.IsPointer || t.IsByRefLike())
+            {
+                // cannot instantiate a generic method on a byref, byreflike, or pointer type
+                return GenerateAndInvokeSizeofHelper(t);
+            }
+
             return szHelper.MakeGenericMethod(t).CreateDelegate<Func<int>>()();
+        }
+
+        private static int GenerateAndInvokeSizeofHelper(Type t)
+        {
+            using var dmd = new DynamicMethodDefinition($"SizeOf<{t}>", typeof(int), []);
+            var il = dmd.GetILProcessor();
+            il.Emit(OpCodes.Sizeof, il.Import(t));
+            il.Emit(OpCodes.Ret);
+            return (int)dmd.Generate().Invoke(null, null)!;
         }
 
         /// <summary>
