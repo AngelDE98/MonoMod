@@ -173,7 +173,7 @@ namespace MonoMod.Utils
                 }
                 else if (c.Operand is VariableDefinition vardef)
                 {
-                    c.Operand = bo.Variables[vardef.Index];
+                    c.Operand = bc.Variables[vardef.Index];
                 }
             }
 
