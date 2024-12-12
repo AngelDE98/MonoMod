@@ -102,18 +102,6 @@ namespace MonoMod.Utils
                 return c;
             }));
 
-            foreach (var c in bc.Instructions)
-            {
-                if (c.Operand is Instruction target)
-                {
-                    c.Operand = bc.Instructions[bo.Instructions.IndexOf(target)];
-                }
-                else if (c.Operand is Instruction[] targets)
-                {
-                    c.Operand = targets.Select(i => bc.Instructions[bo.Instructions.IndexOf(i)]).ToArray();
-                }
-            }
-
             bc.ExceptionHandlers.AddRange(bo.ExceptionHandlers.Select(o =>
             {
                 var c = new ExceptionHandler(o.HandlerType);
@@ -172,6 +160,22 @@ namespace MonoMod.Utils
                 c.EndColumn = o.EndColumn;
                 return c;
             }));
+
+            foreach (var c in bc.Instructions)
+            {
+                if (c.Operand is Instruction target)
+                {
+                    c.Operand = bc.Instructions[bo.Instructions.IndexOf(target)];
+                }
+                else if (c.Operand is Instruction[] targets)
+                {
+                    c.Operand = targets.Select(i => bc.Instructions[bo.Instructions.IndexOf(i)]).ToArray();
+                }
+                else if (c.Operand is VariableDefinition vardef)
+                {
+                    c.Operand = bc.Variables[vardef.Index];
+                }
+            }
 
             return bc;
         }

@@ -266,5 +266,24 @@ namespace MonoMod.UnitTest
             Assert.Equal(OpCodes.Br_S, genClone.Definition.Body.Instructions[0].OpCode);
         }
 
+        [Fact]
+        public void ClonedDMDRelinksVariableDefinitions()
+        {
+            using var origDmd = new DynamicMethodDefinition("Test DMD", null, []);
+            var il = origDmd.GetILProcessor();
+            var varDef = new VariableDefinition(il.Import(typeof(string)));
+            il.Body.Variables.Add(varDef);
+            il.Emit(OpCodes.Ldstr, "hello");
+            il.Emit(OpCodes.Stloc, varDef);
+            il.Emit(OpCodes.Ldloc, varDef);
+            il.Emit(OpCodes.Ret);
+
+            using var genClone = new DynamicMethodDefinition(origDmd);
+
+            Assert.NotEqual(varDef, genClone.Definition.Body.Variables[0]);
+            var newVarDef = genClone.Definition.Body.Variables[0];
+            Assert.Equal(newVarDef, genClone.Definition.Body.Instructions[1].Operand);
+            Assert.Equal(newVarDef, genClone.Definition.Body.Instructions[2].Operand);
+        }
     }
 }
