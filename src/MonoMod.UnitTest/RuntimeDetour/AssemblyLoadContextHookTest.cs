@@ -4,6 +4,9 @@
 #pragma warning disable xUnit1013 // Public method should be marked as test
 
 extern alias New;
+
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using MonoMod.Utils;
 using New::MonoMod.RuntimeDetour;
 using System;
@@ -189,6 +192,9 @@ namespace MonoMod.UnitTest
                 method.Invoke(null, new object[] { null, -1, -1 });
             }
             verify.Invoke(loader, argsSet);
+
+            TestILHookReferences(loader.GetType(), loader.GetType());
+            TestILHookReferences(loader.GetType(), typeof(AssemblyLoadContextHookTest));
         }
 
         public static void TestStaticMethodTarget(Action<object, int, int> orig, object loader, int id1, int id2)
@@ -210,6 +216,59 @@ namespace MonoMod.UnitTest
             LastID1 = id1;
             LastID2 = id2;
         }
+
+        public static void TestILHookReferences(Type baseLoaderType, Type type)
+        {
+            bool alc = type != baseLoaderType;
+            var method = type.GetMethod(nameof(ILHookTarget));
+
+            // make sure the method require hooks to be installed
+            Assert.Throws<TargetInvocationException>(() => method.Invoke(null, new object[] { type, alc }));
+
+            var typeFromHandleDelegate = Type.GetTypeFromHandle;
+            // using a type
+            using (new ILHook(method, il => new ILCursor(il)
+                .GotoNext(i => i.Match(OpCodes.Ldnull))
+                .Remove()
+                .Emit(OpCodes.Ldtoken, type)
+                .EmitCall(typeFromHandleDelegate.Method)
+            ))
+                method.Invoke(null, new object[] { type, alc });
+
+            // using a call
+            using (new ILHook(method, il => new ILCursor(il)
+                .GotoNext(i => i.Match(OpCodes.Ldnull))
+                .Remove()
+                .EmitCall(type.GetMethod(nameof(SimpleMethodToReference)))
+            ))
+                method.Invoke(null, new object[] { type, alc });
+
+            // using a generic
+            using (new ILHook(method, il => new ILCursor(il)
+                .GotoNext(i => i.Match(OpCodes.Ldnull))
+                .Remove()
+                .EmitCall(type.GetMethod(nameof(GenericMethodToRference)).MakeGenericMethod(type))
+            ))
+                method.Invoke(null, new object[] { type, alc });
+
+            // using a method from another module, parameterized on a generic from this module
+            using (new ILHook(method, il => new ILCursor(il)
+                .GotoNext(i => i.Match(OpCodes.Ldnull))
+                .Remove()
+                .EmitCall(baseLoaderType.GetMethod(nameof(GenericMethodToRference)).MakeGenericMethod(type))
+            ))
+                method.Invoke(null, new object[] { type, alc });
+        }
+
+        public static void ILHookTarget(Type expectedLoaderType, bool alc)
+        {
+            Assert.Equal(IsNonALC, !alc);
+            Assert.Equal(null, expectedLoaderType); // null is the hook target
+            Assert.Equal(typeof(AssemblyLoadContextHookTest), expectedLoaderType);
+        }
+
+        public static Type SimpleMethodToReference() => typeof(AssemblyLoadContextHookTest);
+        public static Type GenericMethodToRference<T>() => typeof(T);
 
     }
 }
