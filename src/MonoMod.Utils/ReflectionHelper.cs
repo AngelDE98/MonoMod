@@ -15,6 +15,10 @@ using AssemblyHashAlgorithm = Mono.Cecil.AssemblyHashAlgorithm;
 using ManagedCC = System.Reflection.CallingConventions;
 using UnmanagedCC = System.Runtime.InteropServices.CallingConvention;
 
+#if NET5_0_OR_GREATER
+using System.Runtime.Loader;
+#endif
+
 namespace MonoMod.Utils
 {
     public static partial class ReflectionHelper
@@ -64,17 +68,26 @@ namespace MonoMod.Utils
             Helpers.ThrowIfArgumentNull(stream);
             Assembly asm;
 
-            if (stream is MemoryStream ms)
+#if NET5_0_OR_GREATER
+            if (AssemblyLoadContext.GetLoadContext(Assembly.GetExecutingAssembly()) is AssemblyLoadContext alc)
             {
-                asm = Assembly.Load(ms.GetBuffer());
+                asm = alc.LoadFromStream(stream);
             }
             else
+#endif
             {
-                using (var copy = new MemoryStream())
+                if (stream is MemoryStream ms)
                 {
-                    stream.CopyTo(copy);
-                    copy.Seek(0, SeekOrigin.Begin);
-                    asm = Assembly.Load(copy.GetBuffer());
+                    asm = Assembly.Load(ms.GetBuffer());
+                }
+                else
+                {
+                    using (var copy = new MemoryStream())
+                    {
+                        stream.CopyTo(copy);
+                        copy.Seek(0, SeekOrigin.Begin);
+                        asm = Assembly.Load(copy.GetBuffer());
+                    }
                 }
             }
 
