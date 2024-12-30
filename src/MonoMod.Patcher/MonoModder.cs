@@ -1749,7 +1749,7 @@ namespace MonoMod
                     if (CombineSameMethodMultiModPatches)
                     {
                         /*
-                         * we have to move preview patched method to a new method named patched_()
+                         * we have to move previous patched method to a new method named patched_()
                          * and enumerate next patched method instructions, find instructions which call orig_(), redirect their operand to patched_()
                          */
                         string PickPatchedMethodNewName(int idx = 0)
@@ -1809,7 +1809,7 @@ namespace MonoMod
                     }
                     else
                     {
-                        LogVerbose($"[PatchMethod] Detected mod {method.Module.Name} repatched method {existingMethod.GetID(simple:true)}(), old patched implement from preview mod will be replaced.");
+                        LogVerbose($"[PatchMethod] Detected mod {method.Module.Name} repatched method {existingMethod.GetID(simple:true)}(), old patched implement from previous mod will be replaced.");
                     }
                 }
                 
