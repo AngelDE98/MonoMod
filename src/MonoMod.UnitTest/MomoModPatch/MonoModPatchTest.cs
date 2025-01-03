@@ -16,7 +16,7 @@ namespace MonoMod.UnitTest.MomoModPatch
         {
             var resourcePath = Path.Combine(Path.GetDirectoryName(typeof(MonoModPatchTest).Assembly.Location),
                 "MomoModPatch", "Resources");
-            
+
             //ILSpy can view source code.
             targetDllPath = Path.Combine(resourcePath, "DemoLib.dll");
             aModDllPath = Path.Combine(resourcePath, "DemoLib.ModA.mm.dll");
@@ -73,10 +73,10 @@ namespace MonoMod.UnitTest.MomoModPatch
 
             //do asset
             var ctorResult = type.GetProperty("CtorResult").GetValue(obj) as string;
-            Assert.Equal(ctorResult, "50A");
+            Assert.Equal("50A", ctorResult);
 
             var calcResult = (int)type.GetMethod("Calculate").Invoke(obj, new object[] {1, 5});
-            Assert.Equal(calcResult, (1 + 5) * 10);
+            Assert.Equal((1 + 5) * 10, calcResult);
         }
 
         [Fact]
@@ -89,10 +89,10 @@ namespace MonoMod.UnitTest.MomoModPatch
 
             //do asset
             var ctorResult = type.GetProperty("CtorResult").GetValue(obj) as string;
-            Assert.Contains(ctorResult, new[] {"50A", "B50"});
+            Assert.Contains(ctorResult, ["50A", "B50"]);
 
             var calcResult = (int)type.GetMethod("Calculate").Invoke(obj, new object[] {1, 5});
-            Assert.Contains(calcResult, new[] {(1 + 5) * 10, 10000000 + 1 + 5});
+            Assert.Contains(calcResult, [(1 + 5) * 10, 10000000 + 1 + 5]);
         }
 
         [Fact]
@@ -105,10 +105,10 @@ namespace MonoMod.UnitTest.MomoModPatch
 
             //do asset
             var ctorResult = type.GetProperty("CtorResult").GetValue(obj) as string;
-            Assert.Equal(ctorResult, "B50A");
+            Assert.Equal("B50A", ctorResult);
 
             var calcResult = (int)type.GetMethod("Calculate").Invoke(obj, new object[] {1, 5});
-            Assert.Contains(calcResult, new[] {(1 + 5) * 10 + 1000000, (1000000 + 1 + 5) * 10});
+            Assert.Contains(calcResult, [(1 + 5) * 10 + 1000000, (1000000 + 1 + 5) * 10]);
         }
     }
 }
