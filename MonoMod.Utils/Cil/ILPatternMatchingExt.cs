@@ -411,15 +411,15 @@ namespace MonoMod.Cil {
         } // OperandType.InlineMethod
 
         public static bool MatchCall(this Instruction instr, string typeFullName, string name)
-            => instr.MatchCall(out var v) && v.Is(typeFullName, name);
+            => instr.MatchCall(out var v) && v is not null && v.Is(typeFullName, name);
         public static bool MatchCall<T>(this Instruction instr, string name)
-            => instr.MatchCall(out var v) && v.Is(typeof(T), name);
+            => instr.MatchCall(out var v) && v is not null && v.Is(typeof(T), name);
         public static bool MatchCall(this Instruction instr, Type type, string name)
-            => instr.MatchCall(out var v) && v.Is(type, name);
+            => instr.MatchCall(out var v) && v is not null && v.Is(type, name);
         public static bool MatchCall(this Instruction instr, MethodBase value)
-            => instr.MatchCall(out var v) && v.Is(value);
+            => instr.MatchCall(out var v) && v is not null && v.Is(value);
         public static bool MatchCall(this Instruction instr, MethodReference value)
-            => instr.MatchCall(out var v) && v == value;
+            => instr.MatchCall(out var v) && v is not null && v == value;
         public static bool MatchCall(this Instruction instr, out MethodReference value) {
             if (instr.OpCode == OpCodes.Call) {
                 value = instr.Operand as MethodReference;
@@ -430,15 +430,15 @@ namespace MonoMod.Cil {
         } // OperandType.InlineMethod
 
         public static bool MatchCallvirt(this Instruction instr, string typeFullName, string name)
-            => instr.MatchCallvirt(out var v) && v.Is(typeFullName, name);
+            => instr.MatchCallvirt(out var v) && v is not null && v.Is(typeFullName, name);
         public static bool MatchCallvirt<T>(this Instruction instr, string name)
-            => instr.MatchCallvirt(out var v) && v.Is(typeof(T), name);
+            => instr.MatchCallvirt(out var v) && v is not null && v.Is(typeof(T), name);
         public static bool MatchCallvirt(this Instruction instr, Type type, string name)
-            => instr.MatchCallvirt(out var v) && v.Is(type, name);
+            => instr.MatchCallvirt(out var v) && v is not null && v.Is(type, name);
         public static bool MatchCallvirt(this Instruction instr, MethodBase value)
-            => instr.MatchCallvirt(out var v) && v.Is(value);
+            => instr.MatchCallvirt(out var v) && v is not null && v.Is(value);
         public static bool MatchCallvirt(this Instruction instr, MethodReference value)
-            => instr.MatchCallvirt(out var v) && v == value;
+            => instr.MatchCallvirt(out var v) && v is not null && v == value;
         public static bool MatchCallvirt(this Instruction instr, out MethodReference value) {
             if (instr.OpCode == OpCodes.Callvirt) {
                 value = instr.Operand as MethodReference;
@@ -449,15 +449,15 @@ namespace MonoMod.Cil {
         } // OperandType.InlineMethod
 
         public static bool MatchCallOrCallvirt(this Instruction instr, string typeFullName, string name)
-            => instr.MatchCallOrCallvirt(out var v) && v.Is(typeFullName, name);
+            => instr.MatchCallOrCallvirt(out var v) && v is not null && v.Is(typeFullName, name);
         public static bool MatchCallOrCallvirt<T>(this Instruction instr, string name)
-            => instr.MatchCallOrCallvirt(out var v) && v.Is(typeof(T), name);
+            => instr.MatchCallOrCallvirt(out var v) && v is not null && v.Is(typeof(T), name);
         public static bool MatchCallOrCallvirt(this Instruction instr, Type type, string name)
-            => instr.MatchCallOrCallvirt(out var v) && v.Is(type, name);
+            => instr.MatchCallOrCallvirt(out var v) && v is not null && v.Is(type, name);
         public static bool MatchCallOrCallvirt(this Instruction instr, MethodBase value)
-            => instr.MatchCallOrCallvirt(out var v) && v.Is(value);
+            => instr.MatchCallOrCallvirt(out var v) && v is not null && v.Is(value);
         public static bool MatchCallOrCallvirt(this Instruction instr, MethodReference value)
-            => instr.MatchCallOrCallvirt(out var v) && v == value;
+            => instr.MatchCallOrCallvirt(out var v) && v is not null && v == value;
         public static bool MatchCallOrCallvirt(this Instruction instr, out MethodReference value) {
             if (instr.OpCode == OpCodes.Call || instr.OpCode == OpCodes.Callvirt) {
                 value = instr.Operand as MethodReference;
