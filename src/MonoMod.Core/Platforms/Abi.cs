@@ -103,10 +103,11 @@ namespace MonoMod.Core.Platforms
         {
             Helpers.ThrowIfArgumentNull(type);
 
-            // without more information, we have to assume the following:
+            // TODO reenable when its proven to be the right thing
+            // Without more information, we have to assume the following:
             // nullables are treated as their underlying type
-            var nullableType = Nullable.GetUnderlyingType(type);
-            type = nullableType ?? type;
+            //var nullableType = Nullable.GetUnderlyingType(type);
+            //type = nullableType ?? type;
 
             if (type == typeof(void))
                 return TypeClassification.InRegister; // void can't be a parameter, and doesn't need a return buffer
